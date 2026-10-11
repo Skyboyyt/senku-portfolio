@@ -14,10 +14,9 @@ To host elsewhere, upload the contents of this folder and preserve the folder st
 - assets/: portrait and any future project screenshots.
 
 ## Your portrait
-Your supplied original photo is included here:
-`assets/ChatGPT Image 30 Sept 2026, 22_24_36.jpg`
+The hero picture is your avatar: `assets/avatar.jpg` (a hooded figure in a glowing green neon mask). To change it, replace that file or update the `.portrait` image in index.html. It uses object-fit: cover, so a square image is cropped slightly at the sides to fit the arched frame; adjust object-position on .portrait in styles.css to change the focal point. The image is 361×361, so a larger version (at least 900px wide) will look sharper on high-resolution screens. A monogram fallback shows if the image cannot load.
 
-The site references `assets/ChatGPT Image 30 Sept 2026, 22_24_36.jpg` relative to index.html. Spaces work in the quoted URL. The photo replaces the monogram automatically. It uses object-fit: cover and object-position: center 35%, preserving proportions. Adjust .portrait in styles.css if your photo needs another focal point. The portrait also displays without JavaScript. A monogram fallback is retained if the image cannot load.
+Your original photo is still kept at `assets/ChatGPT Image 30 Sept 2026, 22_24_36.jpg` but is no longer shown on the page.
 
 ## Customize
 Edit text, real project status, and links in index.html. Change the shared color tokens at the top of styles.css for both themes. Update social links in both the contact section and footer. Replace concept previews with actual screenshots when supplied, add descriptive alt text, and only remove the Concept preview label when using real screenshots.
