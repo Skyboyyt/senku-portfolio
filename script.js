@@ -28,3 +28,39 @@ document.addEventListener('DOMContentLoaded', () => {
  hero.addEventListener('pointermove',e=>{if(!fine.matches||reduced.matches)return;cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>{const r=hero.getBoundingClientRect();spot.style.setProperty('--x',(e.clientX-r.left)+'px');spot.style.setProperty('--y',(e.clientY-r.top)+'px');spot.classList.add('active')})});hero.addEventListener('pointerleave',()=>{cancelAnimationFrame(frame);spot.classList.remove('active')});
 })();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+'use strict';
+const reduced=matchMedia('(prefers-reduced-motion: reduce)'),toast=document.querySelector('.toast');let toastTimer;
+function say(text){toast.textContent=text;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2600)}
+
+// Scroll progress bar and active section in the desktop navigation.
+const bar=document.querySelector('.progress'),links=[...document.querySelectorAll('.desktop-nav a')];let ticking=false;
+function onScroll(){ticking=false;const max=document.documentElement.scrollHeight-innerHeight;bar.style.setProperty('--progress',max>0?Math.min(1,scrollY/max):0);let current=null;links.forEach(a=>{const s=document.querySelector(a.getAttribute('href'));if(s&&s.getBoundingClientRect().top<innerHeight*.4)current=a});links.forEach(a=>{const on=a===current;a.classList.toggle('active',on);on?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current')})}
+addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});addEventListener('resize',onScroll);onScroll();
+
+// Rotating phrase in the hero heading. Screen readers keep the original phrase.
+const rot=document.querySelector('.rotator');
+if(rot&&!reduced.matches){const words=rot.dataset.words.split('|');let i=0;rot.parentElement.setAttribute('aria-label',rot.parentElement.textContent);rot.setAttribute('aria-hidden','true');setInterval(()=>{if(document.hidden||reduced.matches)return;rot.classList.add('out');setTimeout(()=>{i=(i+1)%words.length;rot.textContent=words[i];rot.classList.remove('out')},350)},2800)}
+
+// Battle of Shinkai screenshot gallery.
+const main=document.querySelector('.shot-main'),thumbs=[...document.querySelectorAll('.shot-thumb')];
+thumbs.forEach(t=>t.addEventListener('click',()=>{if(t.getAttribute('aria-pressed')==='true')return;thumbs.forEach(o=>o.setAttribute('aria-pressed',String(o===t)));const swap=()=>{main.src=t.dataset.src;main.alt=t.dataset.alt;main.classList.remove('swap')};if(reduced.matches)swap();else{main.classList.add('swap');setTimeout(swap,200)}}));
+
+// Play the game in a dialog on larger screens; phones go straight to the full game tab.
+const modal=document.getElementById('game-modal'),frame=modal.querySelector('.game-frame'),play=document.querySelector('.play-game'),large=matchMedia('(min-width:900px) and (pointer:fine)');let opener=null;
+play.addEventListener('click',e=>{if(!large.matches||typeof modal.showModal!=='function')return;e.preventDefault();opener=play;const f=document.createElement('iframe');f.src=frame.dataset.src;f.title='Battle of Shinkai game';f.allow='fullscreen; autoplay; gamepad';f.allowFullscreen=true;frame.appendChild(f);modal.showModal();document.body.classList.add('menu-open');modal.querySelector('.game-close').focus()});
+function closeGame(){if(modal.open)modal.close()}
+modal.querySelector('.game-close').addEventListener('click',closeGame);
+modal.addEventListener('click',e=>{if(e.target===modal)closeGame()});
+modal.addEventListener('close',()=>{const f=frame.querySelector('iframe');if(f)f.remove();document.body.classList.remove('menu-open');if(opener)opener.focus({preventScroll:true})});
+
+// Copy email to the clipboard.
+const copy=document.querySelector('.copy-email');
+if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',()=>navigator.clipboard.writeText(copy.dataset.copy).then(()=>{copy.textContent='Copied!';say('Email copied to your clipboard.');setTimeout(()=>copy.textContent='Copy email',2000)},()=>say('Could not copy. The email is '+copy.dataset.copy)))}
+
+// Easter egg: type "senku" anywhere.
+let typed='';
+addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,[contenteditable]'))return;typed=(typed+e.key.toLowerCase()).slice(-5);if(typed!=='senku')return;typed='';say('Ten billion percent excited to build with you. ✦');if(!reduced.matches)confetti()});
+function confetti(){const c=document.createElement('canvas'),x=c.getContext('2d'),dpr=devicePixelRatio||1;c.className='confetti';c.width=innerWidth*dpr;c.height=innerHeight*dpr;x.scale(dpr,dpr);document.body.appendChild(c);const colors=['#88abfb','#295ac3','#e8615a','#4ade80','#f5c451'],bits=Array.from({length:140},()=>({x:innerWidth/2,y:innerHeight*.6,vx:(Math.random()-.5)*14,vy:-Math.random()*16-6,s:Math.random()*6+4,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:colors[Math.random()*colors.length|0]}));let n=0;(function step(){x.clearRect(0,0,innerWidth,innerHeight);bits.forEach(b=>{b.vy+=.45;b.x+=b.vx;b.y+=b.vy;b.r+=b.vr;x.save();x.translate(b.x,b.y);x.rotate(b.r);x.fillStyle=b.c;x.fillRect(-b.s/2,-b.s/4,b.s,b.s/2);x.restore()});if(++n<150)requestAnimationFrame(step);else c.remove()})()}
+});
