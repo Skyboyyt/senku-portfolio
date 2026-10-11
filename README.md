@@ -22,7 +22,7 @@ The site references `assets/ChatGPT Image 30 Sept 2026, 22_24_36.jpg` relative t
 ## Customize
 Edit text, real project status, and links in index.html. Change the shared color tokens at the top of styles.css for both themes. Update social links in both the contact section and footer. Replace concept previews with actual screenshots when supplied, add descriptive alt text, and only remove the Concept preview label when using real screenshots.
 
-No project stacks, repositories, testimonials, qualifications, or results were invented. Battle of Shinkai has no confirmed playable features or supported devices in the brief; desktop/mobile support is labeled as a development goal. Blacklist describes management and marketing work without claiming platform development or an unknown completion date. Only add a résumé download when an actual file is available.
+No project stacks, repositories, testimonials, qualifications, or results were invented. Battle of Shinkai details come from its public build repository (github.com/Skyboyyt/battle-of-shinkai). Blacklist describes management and marketing work without claiming platform development or an unknown completion date. Only add a résumé download when an actual file is available.
 
 ## Behavior
 Device theme is the initial default. Manual choices are stored under fahad-theme in localStorage and applied before the stylesheet loads. Clear that key to return to the device preference. Storage errors are handled. The modal mobile menu contains focus, locks scrolling, closes on Escape, backdrop click, link selection, and desktop resize, and restores focus. The two-line menu icon animates into a close icon.
@@ -30,7 +30,18 @@ Device theme is the initial default. Manual choices are stored under fahad-theme
 Reduced-motion preferences disable movement and smooth scrolling. Touch devices do not run the pointer spotlight. Content stays visible without JavaScript and a no-JavaScript mobile navigation is provided. Email, WhatsApp, GitHub, and X are real links; there is no simulated form.
 
 ## Previews
-No screenshots were supplied, and the AxoRonin website could not be retrieved during creation. The three large typographic visuals are labeled Concept preview, not screenshots or gameplay footage.
+Battle of Shinkai uses real screenshots of the live WebGL test build, stored in `assets/shinkai/` (combat, world map, lobby). Visitors can switch between them with the thumbnail buttons. The AxoRonin and Blacklist visuals are still typographic and labeled Concept preview; replace them with real screenshots when available.
+
+## Featured game: Battle of Shinkai
+- The project is featured first in the Work section and announced by the "New" pill in the hero.
+- "Play Battle of Shinkai" links to https://skyboyyt.github.io/battle-of-shinkai/. On desktop (wide screen, mouse), it opens the game in an in-page player dialog; the iframe is created on open and removed on close, so the game and its audio stop. Phones, tablets, and visitors without JavaScript go straight to the full game tab.
+- The player has an "Open full tab" link, which is recommended for wallet sign-in.
+
+## Extra touches
+- Scroll progress bar under the header, and the current section is highlighted in the desktop navigation.
+- The hero heading rotates through a few phrases (screen readers hear the original sentence; disabled with reduced motion).
+- "Copy email" button in the contact section, with a status toast. It only appears when the Clipboard API is available.
+- Easter egg: type `senku` anywhere on the page.
 
 
 All HTML, CSS, and JavaScript are in separate files. script.js is loaded before styles.css to apply your saved theme before painting; the page interactions start after the HTML is ready.
