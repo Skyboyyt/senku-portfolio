@@ -29,7 +29,7 @@ Device theme is the initial default. Manual choices are stored under fahad-theme
 Reduced-motion preferences disable movement and smooth scrolling. Touch devices do not run the pointer spotlight. Content stays visible without JavaScript and a no-JavaScript mobile navigation is provided. Email, WhatsApp, GitHub, and X are real links; there is no simulated form.
 
 ## Previews
-Battle of Shinkai uses real screenshots of the live WebGL test build, stored in `assets/shinkai/` (combat, world map, lobby). Visitors can switch between them with the thumbnail buttons. The AxoRonin and Blacklist visuals are still typographic and labeled Concept preview; replace them with real screenshots when available.
+Battle of Shinkai uses real screenshots of the live WebGL test build, stored in `assets/shinkai/` (combat, world map, lobby). Visitors can switch between them with the thumbnail buttons. Blacklist uses real screenshots of its frontend running in demo mode on fictional sample data, stored in `assets/blacklist/` (research, wallet check, risk ranking); the Demo mode banner is left visible on purpose. The AxoRonin visual is still typographic and labeled Concept preview; replace it with real screenshots when available.
 
 ## Featured game: Battle of Shinkai
 - The project is featured first in the Work section and announced by the "New" pill in the hero.
