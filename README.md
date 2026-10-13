@@ -21,7 +21,7 @@ Your original photo is still kept at `assets/ChatGPT Image 30 Sept 2026, 22_24_3
 ## Customize
 Edit text, real project status, and links in index.html. Change the shared color tokens at the top of styles.css for both themes. Update social links in both the contact section and footer. Replace concept previews with actual screenshots when supplied, add descriptive alt text, and only remove the Concept preview label when using real screenshots.
 
-No project stacks, repositories, testimonials, qualifications, or results were invented. Battle of Shinkai details come from its public build repository (github.com/Skyboyyt/battle-of-shinkai). Blacklist describes management and marketing work without claiming platform development or an unknown completion date. Only add a résumé download when an actual file is available.
+No project stacks, repositories, testimonials, qualifications, or results were invented. Battle of Shinkai details come from its public build repository (github.com/Skyboyyt/battle-of-shinkai). Blacklist details come from its public repository (github.com/Skyboyyt/blacklist); it is presented as an ongoing build whose frontend runs on sample data, with no backend, launch, or completion date claimed. Only add a résumé download when an actual file is available.
 
 ## Behavior
 Device theme is the initial default. Manual choices are stored under fahad-theme in localStorage and applied before the stylesheet loads. Clear that key to return to the device preference. Storage errors are handled. The modal mobile menu contains focus, locks scrolling, closes on Escape, backdrop click, link selection, and desktop resize, and restores focus. The two-line menu icon animates into a close icon.

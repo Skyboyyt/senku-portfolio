@@ -64,3 +64,4 @@ html:not(.js) .shot-thumbs{display:none}
 @media(max-width:400px){.shot-label{display:none!important}}
 @media(max-width:720px){.announce{font-size:.75rem;margin-bottom:24px}.shot-badges{inset:12px 12px auto}.shot-badges span{font-size:.68rem;padding:5px 10px}.shot-thumbs{gap:6px;padding:6px}.shot-thumb span{font-size:.62rem}.facts{gap:16px}.game-modal-bar span{display:none}}
 @media(prefers-reduced-motion:reduce){.pulse{animation:none}.preview.shots:hover .shot-main{transform:none}}
+.description .note+.project-actions{margin-top:22px}
