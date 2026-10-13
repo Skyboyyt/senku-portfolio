@@ -43,9 +43,9 @@ addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(o
 const rot=document.querySelector('.rotator');
 if(rot&&!reduced.matches){const words=rot.dataset.words.split('|');let i=0;rot.parentElement.setAttribute('aria-label',rot.parentElement.textContent);rot.setAttribute('aria-hidden','true');setInterval(()=>{if(document.hidden||reduced.matches)return;rot.classList.add('out');setTimeout(()=>{i=(i+1)%words.length;rot.textContent=words[i];rot.classList.remove('out')},350)},2800)}
 
-// Battle of Shinkai screenshot gallery.
-const main=document.querySelector('.shot-main'),thumbs=[...document.querySelectorAll('.shot-thumb')];
-thumbs.forEach(t=>t.addEventListener('click',()=>{if(t.getAttribute('aria-pressed')==='true')return;thumbs.forEach(o=>o.setAttribute('aria-pressed',String(o===t)));const swap=()=>{main.src=t.dataset.src;main.alt=t.dataset.alt;main.classList.remove('swap')};if(reduced.matches)swap();else{main.classList.add('swap');setTimeout(swap,200)}}));
+// Project screenshot galleries (Battle of Shinkai, Blacklist).
+document.querySelectorAll('.shots').forEach(g=>{const main=g.querySelector('.shot-main'),thumbs=[...g.querySelectorAll('.shot-thumb')];
+thumbs.forEach(t=>t.addEventListener('click',()=>{if(t.getAttribute('aria-pressed')==='true')return;thumbs.forEach(o=>o.setAttribute('aria-pressed',String(o===t)));const swap=()=>{main.src=t.dataset.src;main.alt=t.dataset.alt;main.classList.remove('swap')};if(reduced.matches)swap();else{main.classList.add('swap');setTimeout(swap,200)}}))});
 
 // Play the game in a dialog on larger screens; phones go straight to the full game tab.
 const modal=document.getElementById('game-modal'),frame=modal.querySelector('.game-frame'),play=document.querySelector('.play-game'),large=matchMedia('(min-width:900px) and (pointer:fine)');let opener=null;
