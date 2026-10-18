@@ -1,5 +1,7 @@
 try{var t=localStorage.getItem('fahad-theme');document.documentElement.dataset.theme=['light','dark'].includes(t)?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
 document.documentElement.classList.add('js');
+// Intro: once per browser session, never with reduced motion. CSS hides it after 6s regardless.
+try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&!sessionStorage.getItem('senku-intro'))document.documentElement.classList.add('intro-on')}catch(e){}
 document.addEventListener('DOMContentLoaded', () => {
 'use strict';
 (() => {
@@ -63,4 +65,19 @@ if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',()
 let typed='';
 addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,[contenteditable]'))return;typed=(typed+e.key.toLowerCase()).slice(-5);if(typed!=='senku')return;typed='';say('Ten billion percent excited to build with you. ✦');if(!reduced.matches)confetti()});
 function confetti(){const c=document.createElement('canvas'),x=c.getContext('2d'),dpr=devicePixelRatio||1;c.className='confetti';c.width=innerWidth*dpr;c.height=innerHeight*dpr;x.scale(dpr,dpr);document.body.appendChild(c);const colors=['#88abfb','#295ac3','#e8615a','#4ade80','#f5c451'],bits=Array.from({length:140},()=>({x:innerWidth/2,y:innerHeight*.6,vx:(Math.random()-.5)*14,vy:-Math.random()*16-6,s:Math.random()*6+4,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:colors[Math.random()*colors.length|0]}));let n=0;(function step(){x.clearRect(0,0,innerWidth,innerHeight);bits.forEach(b=>{b.vy+=.45;b.x+=b.vx;b.y+=b.vy;b.r+=b.vr;x.save();x.translate(b.x,b.y);x.rotate(b.r);x.fillStyle=b.c;x.fillRect(-b.s/2,-b.s/4,b.s,b.s/2);x.restore()});if(++n<150)requestAnimationFrame(step);else c.remove()})()}
+});
+
+// Intro animation: SENKU / SKYBOY decodes from random glyphs, then the page is revealed.
+document.addEventListener('DOMContentLoaded', () => {
+'use strict';
+const root=document.documentElement,intro=document.querySelector('.intro');
+const heroIn=()=>root.classList.add('hero-in');
+if(!intro||!root.classList.contains('intro-on')){heroIn();return}
+const glyphs='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*<>/';
+let done=false,timers=[];
+function decode(el,delay){const word=el.dataset.word,steps=word.length*4;let n=0;timers.push(setTimeout(()=>{const t=setInterval(()=>{n++;el.textContent=[...word].map((c,i)=>n/4>i?c:glyphs[Math.random()*glyphs.length|0]).join('');if(n>=steps){clearInterval(t);el.textContent=word;el.classList.add('set')}},45);timers.push(t)},delay))}
+function finish(){if(done)return;done=true;timers.forEach(t=>{clearTimeout(t);clearInterval(t)});try{sessionStorage.setItem('senku-intro','1')}catch(e){}intro.classList.add('intro-out');heroIn();setTimeout(()=>{root.classList.remove('intro-on');intro.remove()},900);removeEventListener('keydown',finish)}
+intro.querySelectorAll('.intro-word').forEach((el,i)=>decode(el,250+i*650));
+intro.addEventListener('click',finish);addEventListener('keydown',finish);
+timers.push(setTimeout(finish,3400));
 });
