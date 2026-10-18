@@ -50,4 +50,11 @@ Each project has a native details/summary section. Click the label, or focus it 
 
 ## Intro animation
 
-The first visit in a browser tab plays a short SENKU / SKYBOY intro (about 3 seconds). Click or press any key to skip it. It does not replay until the tab is closed (sessionStorage), and it is skipped entirely for visitors who prefer reduced motion or have JavaScript off. A CSS failsafe hides it after 6 seconds if the script never runs.
+The first visit in a browser tab plays a short SENKU / SKYBOY intro (about 3 seconds). Click or press any key to skip it. It does not replay until the tab is closed (sessionStorage), and it is skipped when JavaScript is off. Visitors who prefer reduced motion (for example, Windows with "Animation effects" turned off) see a still version of the same screen, with no scramble or flicker. A CSS failsafe hides it after 6 seconds if the script never runs.
+
+## Services, sharing and 404
+
+- **Services** ("What I can help with") lists four kinds of work, each linked to a real project as proof. Keep every card tied to work that exists.
+- **Link previews:** Open Graph and Twitter tags give a proper title and description when the site is shared on WhatsApp, X or elsewhere. A preview image (`og:image`) needs the site's full public address, so add it once the final domain is fixed.
+- **Structured data:** a schema.org `Person` block helps search engines connect the names Fahad Sani, Senku and Skyboy.
+- **404.html** is a styled "page not found" screen. Vercel and most static hosts serve it automatically.

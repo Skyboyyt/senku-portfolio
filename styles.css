@@ -87,7 +87,8 @@ html.intro-on .intro{position:fixed;inset:0;z-index:200;display:grid;place-items
 .intro.intro-out{animation:intro-lift .85s cubic-bezier(.76,0,.24,1) forwards}.intro.intro-out .intro-inner{animation:intro-zoom .6s ease-in forwards}
 @keyframes intro-lift{to{clip-path:inset(0 0 100% 0)}}
 @keyframes intro-zoom{to{opacity:0;transform:scale(1.08);filter:blur(4px)}}
-@media(prefers-reduced-motion:reduce){html.intro-on .intro{display:none}html.intro-on body{overflow:auto}}
+/* Reduced motion keeps a still intro: the global rule stops every animation, so show the finished frame. */
+@media(prefers-reduced-motion:reduce){.intro-slash{color:#7bf5b1}.intro-kicker,.intro-tag{opacity:1}.intro-bar span{transform:none}}
 /* Hero entrance after the intro (or straight away for returning visitors). */
 @keyframes hero-up{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
 html.hero-in .hero-copy>*{animation:hero-up .8s cubic-bezier(.2,.7,.2,1) both}
@@ -101,3 +102,8 @@ html.hero-in .portrait-block{animation:hero-up 1s .2s cubic-bezier(.2,.7,.2,1) b
 .preview.shots{transition:transform .45s,box-shadow .45s}.project:hover .preview.shots{box-shadow:0 0 0 1px var(--accent),0 24px 60px -20px var(--accent)}
 @media(prefers-reduced-motion:reduce){.hero::before{animation:none}html.hero-in .hero-copy>*,html.hero-in .portrait-block{animation:none}.portrait-block:hover .portrait-frame{transform:none}}
 @media(hover:none),(pointer:coarse){.portrait-block:hover .portrait-frame{transform:none;box-shadow:none}}
+.service-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}.service{position:relative;display:flex;flex-direction:column;padding:28px 24px 26px;border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden;transition:transform .3s,border-color .3s,box-shadow .3s}.service:before{content:'';position:absolute;inset:0 0 auto;height:2px;background:var(--accent);transform:scaleX(0);transform-origin:left;transition:transform .35s}.service:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 22px 50px -26px var(--accent)}.service:hover:before{transform:scaleX(1)}.service-num{font-size:.75rem;letter-spacing:.14em;color:var(--accent);margin-bottom:34px}.service h3{font-size:1.3rem;margin-bottom:10px}.service p{font-size:.9rem;line-height:1.7;color:var(--muted);margin-bottom:22px}.service .text-link{margin-top:auto;align-self:flex-start;font-size:.85rem}
+@media(max-width:1000px){.service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.service-grid{grid-template-columns:1fr}.service-num{margin-bottom:18px}}
+.pulse{position:relative;display:inline-block;width:8px;height:8px;margin-right:10px;border-radius:50%;background:#22c55e;vertical-align:1px}.pulse:after{content:'';position:absolute;inset:0;border-radius:50%;background:#22c55e;animation:pulse 2s ease-out infinite}@keyframes pulse{to{transform:scale(3);opacity:0}}
+@media(prefers-reduced-motion:reduce){.service,.service:before{transition:none}.service:hover{transform:none}.pulse:after{animation:none}}
