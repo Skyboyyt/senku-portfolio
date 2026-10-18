@@ -21,7 +21,7 @@ Your original photo is still kept at `assets/ChatGPT Image 30 Sept 2026, 22_24_3
 ## Customize
 Edit text, real project status, and links in index.html. Change the shared color tokens at the top of styles.css for both themes. Update social links in both the contact section and footer. Replace concept previews with actual screenshots when supplied, add descriptive alt text, and only remove the Concept preview label when using real screenshots.
 
-No project stacks, repositories, testimonials, qualifications, or results were invented. Battle of Shinkai details come from its public build repository (github.com/Skyboyyt/battle-of-shinkai). Blacklist details come from its public repository (github.com/Skyboyyt/blacklist); it is presented as an ongoing build whose frontend runs on sample data, with no backend, launch, or completion date claimed. Only add a résumé download when an actual file is available.
+No project stacks, repositories, testimonials, qualifications, or results were invented. Battle of Shinkai details come from its public build repository (github.com/Skyboyyt/battle-of-shinkai). Blacklist details come from its public repository (github.com/Skyboyyt/blacklist); it is presented as a live test build (public test environment, not launched), with no launch or completion date claimed. Only add a résumé download when an actual file is available.
 
 ## Behavior
 Device theme is the initial default. Manual choices are stored under fahad-theme in localStorage and applied before the stylesheet loads. Clear that key to return to the device preference. Storage errors are handled. The modal mobile menu contains focus, locks scrolling, closes on Escape, backdrop click, link selection, and desktop resize, and restores focus. The two-line menu icon animates into a close icon.
@@ -29,7 +29,7 @@ Device theme is the initial default. Manual choices are stored under fahad-theme
 Reduced-motion preferences disable movement and smooth scrolling. Touch devices do not run the pointer spotlight. Content stays visible without JavaScript and a no-JavaScript mobile navigation is provided. Email, WhatsApp, GitHub, and X are real links; there is no simulated form.
 
 ## Previews
-Battle of Shinkai uses real screenshots of the live WebGL test build, stored in `assets/shinkai/` (combat, world map, lobby). Visitors can switch between them with the thumbnail buttons. Blacklist uses real screenshots of its frontend running in demo mode on fictional sample data, stored in `assets/blacklist/` (research, wallet check, risk ranking); the Demo mode banner is left visible on purpose. The AxoRonin visual is still typographic and labeled Concept preview; replace it with real screenshots when available.
+Battle of Shinkai uses real screenshots of the live WebGL test build, stored in `assets/shinkai/` (combat, world map, lobby). Visitors can switch between them with the thumbnail buttons. Blacklist uses real screenshots of an earlier demo build running on fictional sample data, stored in `assets/blacklist/` (research, wallet check, risk ranking); they are labeled "Earlier demo screenshot" and should be replaced with screenshots of the live test site. The AxoRonin visual is still typographic and labeled Concept preview; replace it with real screenshots when available.
 
 ## Featured game: Battle of Shinkai
 - The project is featured first in the Work section and announced by the "New" pill in the hero.
@@ -47,3 +47,7 @@ All HTML, CSS, and JavaScript are in separate files. script.js is loaded before 
 
 ## Behind the project
 Each project has a native details/summary section. Click the label, or focus it and press Enter or Space, to expand or collapse it. These sections work without JavaScript. Edit their copy in index.html and their styles under .project-story in styles.css. Only confirmed project information is included; add challenges or lessons when you have real details to share.
+
+## Intro animation
+
+The first visit in a browser tab plays a short SENKU / SKYBOY intro (about 3 seconds). Click or press any key to skip it. It does not replay until the tab is closed (sessionStorage), and it is skipped entirely for visitors who prefer reduced motion or have JavaScript off. A CSS failsafe hides it after 6 seconds if the script never runs.

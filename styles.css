@@ -66,3 +66,38 @@ html:not(.js) .shot-thumbs{display:none}
 @media(prefers-reduced-motion:reduce){.pulse{animation:none}.preview.shots:hover .shot-main{transform:none}}
 .description .note+.project-actions{margin-top:22px}
 .dev-badge::before{content:"";width:8px;height:8px;border-radius:50%;background:#f5c451}
+/* Intro: SENKU / SKYBOY decodes in neon green (the avatar's mask), then the page is revealed. */
+.intro{display:none}
+html.intro-on body{overflow:hidden}
+html.intro-on .intro{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:#060807;color:#eafff3;cursor:pointer;animation:intro-failsafe 0s 6s forwards}
+@keyframes intro-failsafe{to{visibility:hidden;pointer-events:none}}
+.intro-glow{position:absolute;inset:-20%;background:radial-gradient(40% 35% at 50% 50%,rgba(57,255,136,.18),transparent 70%),repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 4px);animation:intro-breathe 2.4s ease-in-out infinite alternate}
+@keyframes intro-breathe{from{opacity:.55;transform:scale(1)}to{opacity:1;transform:scale(1.06)}}
+.intro-inner{position:relative;text-align:center;padding:24px}
+.intro-kicker{margin:0 0 18px;font-size:.75rem;letter-spacing:.42em;text-transform:uppercase;color:#7bf5b1;opacity:0;animation:intro-rise .6s .1s forwards}
+.intro-name{display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;gap:.25em;margin:0;font:700 clamp(2.6rem,10vw,7.5rem)/1 'Courier New',ui-monospace,monospace;letter-spacing:.06em}
+.intro-word{color:#b9ffd6;text-shadow:0 0 8px rgba(57,255,136,.55),0 0 28px rgba(57,255,136,.35);transition:color .3s,text-shadow .3s}.intro-word.set{color:#39ff88;text-shadow:0 0 6px #39ff88,0 0 22px rgba(57,255,136,.8),0 0 60px rgba(57,255,136,.45)}
+.intro-slash{color:#3a5246;font-weight:400;transform:skewX(-12deg);animation:intro-flicker 1.2s .9s both}
+@keyframes intro-flicker{0%,40%{opacity:0}45%{opacity:1}50%{opacity:.2}60%,100%{opacity:1;color:#7bf5b1}}
+.intro-bar{width:min(320px,70vw);height:2px;margin:34px auto 16px;background:rgba(57,255,136,.15);overflow:hidden;border-radius:2px}.intro-bar span{display:block;height:100%;background:#39ff88;box-shadow:0 0 12px #39ff88;transform-origin:left;animation:intro-load 2.7s .2s cubic-bezier(.6,.05,.3,1) both}
+@keyframes intro-load{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.intro-tag{margin:0;font-size:.8rem;letter-spacing:.08em;color:#6fa98a;opacity:0;animation:intro-rise .6s 1.4s forwards}
+.intro-hint{position:absolute;bottom:22px;left:0;right:0;margin:0;text-align:center;font-size:.72rem;letter-spacing:.12em;color:#4d6e5c}
+@keyframes intro-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.intro.intro-out{animation:intro-lift .85s cubic-bezier(.76,0,.24,1) forwards}.intro.intro-out .intro-inner{animation:intro-zoom .6s ease-in forwards}
+@keyframes intro-lift{to{clip-path:inset(0 0 100% 0)}}
+@keyframes intro-zoom{to{opacity:0;transform:scale(1.08);filter:blur(4px)}}
+@media(prefers-reduced-motion:reduce){html.intro-on .intro{display:none}html.intro-on body{overflow:auto}}
+/* Hero entrance after the intro (or straight away for returning visitors). */
+@keyframes hero-up{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+html.hero-in .hero-copy>*{animation:hero-up .8s cubic-bezier(.2,.7,.2,1) both}
+html.hero-in .hero-copy>:nth-child(2){animation-delay:.08s}html.hero-in .hero-copy>:nth-child(3){animation-delay:.16s}html.hero-in .hero-copy>:nth-child(4){animation-delay:.24s}html.hero-in .hero-copy>:nth-child(5){animation-delay:.32s}html.hero-in .hero-copy>:nth-child(6){animation-delay:.4s}
+html.hero-in .portrait-block{animation:hero-up 1s .2s cubic-bezier(.2,.7,.2,1) both}
+/* Slow ambient glow behind the hero. */
+.hero::before{content:'';position:absolute;z-index:-1;inset:0;pointer-events:none;background:radial-gradient(30% 40% at 20% 30%,var(--spot),transparent 70%),radial-gradient(25% 35% at 80% 20%,rgba(57,255,136,.07),transparent 70%);animation:hero-drift 14s ease-in-out infinite alternate}
+@keyframes hero-drift{from{transform:translate3d(-2%,0,0)}to{transform:translate3d(3%,4%,0)}}
+.portrait-frame{transition:box-shadow .5s,transform .5s}.portrait-block:hover .portrait-frame{box-shadow:0 0 0 1px rgba(57,255,136,.35),0 24px 60px rgba(57,255,136,.12);transform:translateY(-4px)}
+/* Project cards glow softly on hover. */
+.preview.shots{transition:transform .45s,box-shadow .45s}.project:hover .preview.shots{box-shadow:0 0 0 1px var(--accent),0 24px 60px -20px var(--accent)}
+@media(prefers-reduced-motion:reduce){.hero::before{animation:none}html.hero-in .hero-copy>*,html.hero-in .portrait-block{animation:none}.portrait-block:hover .portrait-frame{transform:none}}
+@media(hover:none),(pointer:coarse){.portrait-block:hover .portrait-frame{transform:none;box-shadow:none}}
