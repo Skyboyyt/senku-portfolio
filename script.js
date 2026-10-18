@@ -1,7 +1,7 @@
 try{var t=localStorage.getItem('fahad-theme');document.documentElement.dataset.theme=['light','dark'].includes(t)?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
 document.documentElement.classList.add('js');
 // Intro: once per browser session, never with reduced motion. CSS hides it after 6s regardless.
-try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&!sessionStorage.getItem('senku-intro'))document.documentElement.classList.add('intro-on')}catch(e){}
+try{if(!sessionStorage.getItem('senku-intro'))document.documentElement.classList.add('intro-on')}catch(e){}
 document.addEventListener('DOMContentLoaded', () => {
 'use strict';
 (() => {
@@ -77,7 +77,7 @@ const glyphs='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%&*<>/';
 let done=false,timers=[];
 function decode(el,delay){const word=el.dataset.word,steps=word.length*4;let n=0;timers.push(setTimeout(()=>{const t=setInterval(()=>{n++;el.textContent=[...word].map((c,i)=>n/4>i?c:glyphs[Math.random()*glyphs.length|0]).join('');if(n>=steps){clearInterval(t);el.textContent=word;el.classList.add('set')}},45);timers.push(t)},delay))}
 function finish(){if(done)return;done=true;timers.forEach(t=>{clearTimeout(t);clearInterval(t)});try{sessionStorage.setItem('senku-intro','1')}catch(e){}intro.classList.add('intro-out');heroIn();setTimeout(()=>{root.classList.remove('intro-on');intro.remove()},900);removeEventListener('keydown',finish)}
-intro.querySelectorAll('.intro-word').forEach((el,i)=>decode(el,250+i*650));
+if(matchMedia('(prefers-reduced-motion: reduce)').matches)intro.querySelectorAll('.intro-word').forEach(el=>el.classList.add('set'));else intro.querySelectorAll('.intro-word').forEach((el,i)=>decode(el,250+i*650));
 intro.addEventListener('click',finish);addEventListener('keydown',finish);
 timers.push(setTimeout(finish,3400));
 });

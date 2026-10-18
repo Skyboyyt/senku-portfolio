@@ -50,7 +50,7 @@ Each project has a native details/summary section. Click the label, or focus it 
 
 ## Intro animation
 
-The first visit in a browser tab plays a short SENKU / SKYBOY intro (about 3 seconds). Click or press any key to skip it. It does not replay until the tab is closed (sessionStorage), and it is skipped entirely for visitors who prefer reduced motion or have JavaScript off. A CSS failsafe hides it after 6 seconds if the script never runs.
+The first visit in a browser tab plays a short SENKU / SKYBOY intro (about 3 seconds). Click or press any key to skip it. It does not replay until the tab is closed (sessionStorage), and it is skipped when JavaScript is off. Visitors who prefer reduced motion (for example, Windows with "Animation effects" turned off) see a still version of the same screen, with no scramble or flicker. A CSS failsafe hides it after 6 seconds if the script never runs.
 
 ## Services, sharing and 404
 
