@@ -97,4 +97,4 @@ function closeBooking(){dialog.close();}
 document.querySelector('#close-booking').addEventListener('click',closeBooking);
 document.querySelector('#finish-booking').addEventListener('click',closeBooking);
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closeBooking();}});
-dialog.addEventListener('close',()=>{form.reset();dateInput.value='';document.querySelector('#success-message').textContent='';document.querySelector('#visit-summary').replaceChildren();document.querySelector('#success-summary').replaceChildren();document.querySelector('#time-options').replaceChildren();if(returnFocus)returnFocus.focus();});
+dialog.addEventListener('close',()=>{form.reset();dateInput.value='';document.querySelector('#success-message').textContent='';document.querySelector('#visit-summary').replaceChildren();document.querySelector('#success-summary').replaceChildren();document.querySelector('#time-options').replaceChildren();if(returnFocus && returnFocus.offsetParent !== null)returnFocus.focus();else document.querySelector('#open-menu')?.focus();});
