@@ -90,7 +90,7 @@ form.addEventListener('submit',e=>{
  if(!name.value.trim()){document.querySelector('#details-error').textContent='Add a first name to preview your booking.';name.focus();return;}
  if(!email.checkValidity()){email.reportValidity();return;}
  fillSummary('#success-summary');
- document.querySelector('#success-message').textContent=`Here's your sample visit, ${name.value.trim()}. We would send the details to ${email.value} in a live booking system.`;
+ document.querySelector('#success-message').textContent=`Here's your appointment preview, ${name.value.trim()}.`;
  showStep(2);
 });
 function closeBooking(){dialog.close();}
