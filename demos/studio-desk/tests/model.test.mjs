@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {totals,invoiceStatus,addPayment,csv} from '../model.mjs';
+const invoice={issued:true,due:'2026-10-30',items:[{quantity:2,rate:12500},{quantity:1.5,rate:8000}],discount:2000,tax:7.5,payments:[]};
+test('invoice totals apply discount before tax and round to cents',()=>assert.deepEqual(totals(invoice),{subtotal:37000,discount:2000,tax:2625,total:37625,paid:0,balance:37625}));
+test('partial and full payments change status without allowing overpayment',()=>{let p=addPayment(invoice,10000,'2026-10-23');assert.equal(invoiceStatus(p,'2026-10-23'),'Part paid');assert.equal(totals(p).balance,27625);p=addPayment(p,27625,'2026-10-24');assert.equal(invoiceStatus(p,'2026-11-03'),'Paid');assert.throws(()=>addPayment(p,1,'2026-10-24'));assert.equal(invoice.payments.length,0);});
+test('overdue takes precedence over part paid, drafts never accept payments',()=>{const p=addPayment(invoice,100,'2026-10-23');assert.equal(invoiceStatus(p,'2026-10-31'),'Overdue');assert.equal(invoiceStatus({...invoice,issued:false},'2026-11-01'),'Draft');assert.throws(()=>addPayment({...invoice,issued:false},100,'2026-10-23'));});
+test('CSV quotes values and neutralizes spreadsheet formula cells',()=>assert.equal(csv([['=SUM(1,2)','hello"there','safe']]),'"\'=SUM(1,2)","hello""there","safe"'));
