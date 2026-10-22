@@ -7,8 +7,3 @@
 .topbar .mobile-toggle{display:none}@media(max-width:900px){.topbar .mobile-toggle{display:inline-flex}}
 
 .sr-only{left:0;top:0;clip-path:inset(50%)}
-
-/* Keep navigation and appearance controls in reach at every screen size. */
-.topbar .mobile-toggle{display:inline-flex;flex-shrink:0;flex-direction:column;gap:5px;width:40px;height:40px;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;background:var(--surface)}.mobile-toggle span{height:1.5px;width:17px;background:currentColor}.breadcrumb{margin-right:auto}.header-theme{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;min-width:40px;padding:8px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font-size:11px;white-space:nowrap}.header-theme:hover{background:var(--soft)}.header-theme svg{width:18px;height:18px}
-@media(min-width:901px){body.nav-collapsed .sidebar{display:none}body.nav-collapsed .shell{margin-left:0;width:100%}body.nav-collapsed #toast{left:50%}}
-@media(max-width:650px){.header-theme{padding:8px}.header-theme span{display:none}.breadcrumb{display:none}.header-actions{margin-left:auto;gap:9px}.topbar{flex-wrap:nowrap}.global-search input:focus{width:110px}}
