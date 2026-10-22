@@ -1,60 +1,25 @@
 # Fahad Sani — Portfolio
 
-A complete, dependency-free portfolio built with semantic HTML, CSS, and JavaScript.
+A client-focused portfolio for Fahad Sani (Skyboy / Senku), built with semantic HTML, CSS, and JavaScript. Deploy the repository root as a static website; no package installation or build step is required.
 
-## Setup
-The ready-to-use website is in this folder. Open index.html in a modern browser. No installation or build is needed. To preview over HTTP, run `python -m http.server 8080` from this folder and visit http://localhost:8080, or use any static web server.
+## Design and content
 
-To host elsewhere, upload the contents of this folder and preserve the folder structure. The .openai/hosting.json file is only needed by Sites hosting.
+Charcoal, warm white, and lime connect the interface to the existing green avatar. The page introduces Fahad, presents three real projects, explains services and the working process, and offers email and WhatsApp contact links. Blacklist leads the work section as evidence of full-stack development. Project details use native disclosures to keep the overview scannable. Existing screenshots, project statuses, public contact information, and external project links are preserved. AxoRonin's illustrative visual stays labeled “Concept preview”; Blacklist's screenshots stay labeled as earlier demo images. No testimonials, client results, or metrics are invented.
 
 ## Files
-- index.html: content, semantic page structure, and metadata.
-- styles.css: responsive layouts, light/dark theme tokens, and motion.
-- script.js: theme initialization, accessible menu, theme persistence, portrait fallback, spotlight, reveals, current year.
-- assets/: portrait and any future project screenshots.
 
-## Your portrait
-The hero picture is your avatar: `assets/avatar.jpg` (a hooded figure in a glowing green neon mask). To change it, replace that file or update the `.portrait` image in index.html. It uses object-fit: cover, so a square image is cropped slightly at the sides to fit the arched frame; adjust object-position on .portrait in styles.css to change the focal point. The image is 361×361, so a larger version (at least 900px wide) will look sharper on high-resolution screens. A monogram fallback shows if the image cannot load.
+- `index.html`: content, metadata, structured data, project galleries, and navigation.
+- `styles.css`: responsive layout, themes, motion, and reduced-motion/print styles.
+- `script.js`: theme preference, native mobile dialog, reveal observer, progress indicator, galleries, email copy, and subtle pointer tilt.
+- `assets/`: existing avatar and project screenshots.
+- `404.html`: existing not-found page.
 
-Your original photo is still kept at `assets/ChatGPT Image 30 Sept 2026, 22_24_36.jpg` but is no longer shown on the page.
+## Behavior and accessibility
 
-## Customize
-Edit text, real project status, and links in index.html. Change the shared color tokens at the top of styles.css for both themes. Update social links in both the contact section and footer. Replace concept previews with actual screenshots when supplied, add descriptive alt text, and only remove the Concept preview label when using real screenshots.
+The page opens in dark mode unless a visitor has saved a light/dark choice under `fahad-theme`. Storage is optional and errors are handled. JavaScript adds scroll reveals only after an observer is available; content remains readable without it. Reduced-motion preferences disable movement and smooth scrolling. Touch devices skip pointer tilt. Native dialog behavior contains focus and supports Escape; navigation closes the menu and focuses the target section. Screenshot buttons update the main image, descriptive alternative text, and pressed state. Copy email is available when the Clipboard API is supported. Contact links work without JavaScript.
 
-No project stacks, repositories, testimonials, qualifications, or results were invented. Battle of Shinkai details come from its public build repository (github.com/Skyboyyt/battle-of-shinkai). Blacklist details come from its public repository (github.com/Skyboyyt/blacklist); it is presented as a live test build (public test environment, not launched), with no launch or completion date claimed. Only add a résumé download when an actual file is available.
+Motion uses CSS and native JavaScript. No animation framework, game engine, or extra runtime is downloaded. Google Fonts supplies DM Sans and Manrope, with local fallbacks. The game opens in its own tab rather than downloading a WebGL build into the portfolio page.
 
-## Behavior
-Device theme is the initial default. Manual choices are stored under fahad-theme in localStorage and applied before the stylesheet loads. Clear that key to return to the device preference. Storage errors are handled. The modal mobile menu contains focus, locks scrolling, closes on Escape, backdrop click, link selection, and desktop resize, and restores focus. The two-line menu icon animates into a close icon.
+## Local verification
 
-Reduced-motion preferences disable movement and smooth scrolling. Touch devices do not run the pointer spotlight. Content stays visible without JavaScript and a no-JavaScript mobile navigation is provided. Email, WhatsApp, GitHub, and X are real links; there is no simulated form.
-
-## Previews
-Battle of Shinkai uses real screenshots of the live WebGL test build, stored in `assets/shinkai/` (combat, world map, lobby). Visitors can switch between them with the thumbnail buttons. Blacklist uses real screenshots of an earlier demo build running on fictional sample data, stored in `assets/blacklist/` (research, wallet check, risk ranking); they are labeled "Earlier demo screenshot" and should be replaced with screenshots of the live test site. The AxoRonin visual is still typographic and labeled Concept preview; replace it with real screenshots when available.
-
-## Featured game: Battle of Shinkai
-- The project is featured first in the Work section and announced by the "New" pill in the hero.
-- "Play Battle of Shinkai" links to https://skyboyyt.github.io/battle-of-shinkai/. On desktop (wide screen, mouse), it opens the game in an in-page player dialog; the iframe is created on open and removed on close, so the game and its audio stop. Phones, tablets, and visitors without JavaScript go straight to the full game tab.
-- The player has an "Open full tab" link, which is recommended for wallet sign-in.
-
-## Extra touches
-- Scroll progress bar under the header, and the current section is highlighted in the desktop navigation.
-- The hero heading rotates through a few phrases (screen readers hear the original sentence; disabled with reduced motion).
-- "Copy email" button in the contact section, with a status toast. It only appears when the Clipboard API is available.
-- Easter egg: type `senku` anywhere on the page.
-
-
-All HTML, CSS, and JavaScript are in separate files. script.js is loaded before styles.css to apply your saved theme before painting; the page interactions start after the HTML is ready.
-
-## Behind the project
-Each project has a native details/summary section. Click the label, or focus it and press Enter or Space, to expand or collapse it. These sections work without JavaScript. Edit their copy in index.html and their styles under .project-story in styles.css. Only confirmed project information is included; add challenges or lessons when you have real details to share.
-
-## Intro animation
-
-The first visit in a browser tab plays a short SENKU / SKYBOY intro (about 3 seconds). Click or press any key to skip it. It does not replay until the tab is closed (sessionStorage), and it is skipped when JavaScript is off. Visitors who prefer reduced motion (for example, Windows with "Animation effects" turned off) see a still version of the same screen, with no scramble or flicker. A CSS failsafe hides it after 6 seconds if the script never runs.
-
-## Services, sharing and 404
-
-- **Services** ("What I can help with") lists four kinds of work, each linked to a real project as proof. Keep every card tied to work that exists.
-- **Link previews:** Open Graph and Twitter tags give a proper title and description when the site is shared on WhatsApp, X or elsewhere. A preview image (`og:image`) needs the site's full public address, so add it once the final domain is fixed.
-- **Structured data:** a schema.org `Person` block helps search engines connect the names Fahad Sani, Senku and Skyboy.
-- **404.html** is a styled "page not found" screen. Vercel and most static hosts serve it automatically.
+`node --check script.js` verifies syntax. Serve the root using any static HTTP server to inspect layouts. Verify themes, mobile menu (open, link, Escape), screenshot selections, disclosure expansion, links, and narrow widths. Check that all local asset and fragment references resolve. The site has no backend or submission form.
