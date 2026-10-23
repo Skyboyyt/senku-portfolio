@@ -26,8 +26,8 @@
   // Non-secret settings. Secrets (PROXY_SHARED_SECRET, ANTHROPIC_API_KEY, Stripe keys)
   // are set with `wrangler secret put`.
   "vars": {
-    "WEB_ORIGIN": "https://supportflow-web.example.workers.dev",
-    "API_PUBLIC_URL": "https://supportflow-api.example.workers.dev",
+    "WEB_ORIGIN": "https://supportflow-web.sanifahad24.workers.dev",
+    "API_PUBLIC_URL": "https://supportflow-api.sanifahad24.workers.dev",
     "COOKIE_SECURE": "true",
     "BILLING_MODE": "disabled",
     "LOG_LEVEL": "info"
