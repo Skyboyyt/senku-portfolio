@@ -1,0 +1,4 @@
+# Local settings for `wrangler dev` (copy to .dev.vars, which is git-ignored).
+PROXY_SHARED_SECRET=
+API_INTERNAL_URL=http://127.0.0.1:8787
+CLIENT_IP_HEADER=cf-connecting-ip

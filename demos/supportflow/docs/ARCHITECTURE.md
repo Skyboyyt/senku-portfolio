@@ -66,7 +66,7 @@ The public widget identifies a workspace by its public key, which only reaches `
 
 | Table | Purpose |
 | --- | --- |
-| `users`, `sessions` | Accounts (argon2id hashes) and hashed session tokens with sliding expiry |
+| `users`, `sessions` | Accounts (bcrypt hashes made by `pgcrypto`) and hashed session tokens with sliding expiry |
 | `organizations` | Workspaces, AI settings, retention, ticket counter |
 | `memberships`, `invitations` | Roles per workspace; hashed single-use invitation tokens |
 | `subscriptions`, `billing_events` | Plan and provider state; processed webhook IDs for idempotency |
@@ -92,11 +92,28 @@ Migrations live in `apps/api/drizzle/` and are generated with `pnpm db:generate`
 
 ## Realtime
 
-`RealtimeBus` is an in-process `EventEmitter` with two channel types: `org:<id>` (dashboard) and `visitor:<conversationId>` (widget). Dashboard events are hints ("conversation X changed"); the client refetches through the authorised API, so authorization stays in one place. The widget re-syncs over HTTPS whenever its socket opens and polls while the socket is down.
+Realtime events go through a `RealtimePublisher` with two channel types: `org:<id>` (dashboard) and `visitor:<conversationId>` (widget). On Node it is `RealtimeBus`, an in-process `EventEmitter`; on Cloudflare Workers it is `HubPublisher`, which posts each event to the channel's `RealtimeHub` Durable Object (see below). Dashboard events are hints ("conversation X changed"); the client refetches through the authorised API, so authorization stays in one place. The widget re-syncs over HTTPS whenever its socket opens and polls while the socket is down.
 
-To run more than one API instance, replace the bus with Postgres `LISTEN/NOTIFY` (or Redis pub/sub) and move rate-limit state to Redis.
+To run more than one Node instance, replace the bus with Postgres `LISTEN/NOTIFY` (or Redis pub/sub) and move rate-limit state to Redis. The Workers runtime already fans out across instances.
 
 ## Background work
 
-- AI automation runs on a `TaskTracker` so shutdown and tests can wait for it.
-- An hourly job applies each workspace's retention policy, purges demo conversations older than 24 hours, deletes expired sessions, and drops audit-log and contact-form entries older than a year.
+- AI automation runs on a `TaskTracker` so shutdown and tests can wait for it. On Workers, each request hands `tasks.idle()` to `waitUntil`, so AI replies and realtime publishes finish after the response is sent.
+- An hourly job (a timer on Node, a Cron Trigger on Workers) applies each workspace's retention policy, purges demo conversations older than 24 hours, deletes expired sessions, and drops audit-log and contact-form entries older than a year.
+
+## Runtimes: Node and Cloudflare Workers
+
+The same Fastify app runs in two places. `src/server.ts` starts it as a Node server (Render, Docker, local development); `src/worker.ts` runs it on Cloudflare Workers. Route handlers, validation, auth and tenancy checks are shared; only the edges differ:
+
+| Concern | Node (`server.ts`) | Cloudflare Workers (`worker.ts`) |
+| --- | --- | --- |
+| HTTP | `app.listen()` | The app is built at startup (Fastify compiles route matchers, which Workers only allow then) and listens on the runtime's `node:http` implementation; `handleAsNodeRequest` passes each request to it. |
+| Database | One postgres.js pool | One short-lived client per request through **Hyperdrive** (Workers can't share sockets between requests). `ctx.db` reads it from `AsyncLocalStorage`, so handlers don't change. |
+| Passwords | bcrypt in Postgres (`pgcrypto`) | Same. Hashing in the database keeps it inside the 10 ms CPU limit. |
+| WebSockets | `@fastify/websocket` + `RealtimeBus` | The Worker authorises the upgrade, then hands the socket to the channel's **`RealtimeHub` Durable Object** (hibernating WebSockets). Close codes match Node. |
+| Socket tickets | HMAC-signed, nonce kept in memory | HMAC-signed, nonce kept in the workspace's Durable Object |
+| `/widget.js` | Served by Fastify | Workers static assets (`public/_headers` sets CORS-friendly headers) |
+| Jobs | `setInterval` | Cron Trigger (`scheduled` handler) |
+| Logs | pino to stdout | pino to `console`, collected by Workers Logs |
+
+The web app runs on Workers too, built with OpenNext (`apps/web/wrangler.jsonc`). Its `/api` proxy calls the API Worker over HTTPS; `global_fetch_strictly_public` allows one `workers.dev` Worker to call another.

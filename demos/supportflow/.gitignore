@@ -11,3 +11,6 @@ test-results
 apps/api/public/widget.js
 next-env.d.ts
 .next-e2e
+.wrangler
+.dev.vars
+.open-next

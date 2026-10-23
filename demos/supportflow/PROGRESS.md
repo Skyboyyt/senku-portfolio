@@ -21,7 +21,7 @@ Kept up to date at the end of every phase so work can resume from here. Last upd
 | --- | --- |
 | `pnpm -r typecheck` | Passes (strict mode, all packages) |
 | `pnpm lint` | Passes |
-| API tests (`apps/api`, real Postgres) | 102 passed |
+| API tests (`apps/api`, real Postgres) | 105 passed |
 | Widget tests (`packages/widget`, happy-dom) | 9 passed |
 | Shared tests (`packages/shared`) | 9 passed |
 | Playwright e2e (`pnpm e2e`, production builds) | 20 passed |
@@ -46,18 +46,20 @@ Kept up to date at the end of every phase so work can resume from here. Last upd
 
 **Phase 8.** Security review fixes (per-IP widget limit that can't be bypassed by minting tokens); Playwright suite; fixes for bugs it found (widget missing fast AI replies, inbox list not updating live, invite redirect, contrast and labelling issues); sitemap, robots, Open Graph image, error pages; README, architecture, API, security, deployment and case-study documents; Render blueprint and Vercel config; real screenshots; portfolio entry.
 
+**Cloudflare port.** The API also runs on Cloudflare Workers (`apps/api/src/worker.ts`): Hyperdrive to Neon with a per-request connection, a `RealtimeHub` Durable Object for WebSockets, HMAC-signed socket tickets, a Cron Trigger for maintenance and static `widget.js`. Password hashing moved to Postgres (`pgcrypto` bcrypt) to fit the Workers CPU limit. The web app builds for Workers with OpenNext. Verified locally in `workerd`: an end-to-end smoke test (auth, both socket types, cross-tenant refusal, realtime fan-out, cron) and the full Playwright suite (20/20) against both Workers. The Node path still passes everything (123 unit and API tests, 20 e2e).
+
 ## Blockers and outstanding work
 
 **Needs the owner (credentials or paid services):**
 
-- **Deployment** — needs a Neon database, a Render web service (paid tier recommended for WebSockets) and a Vercel project. Steps are in `docs/DEPLOYMENT.md`. Nothing has been deployed.
+- **Deployment** — the chosen setup is Cloudflare Workers + Neon (free plans). It needs a Cloudflare API token and account ID and a Neon connection string in the session environment, and network access to `api.cloudflare.com` and Neon. Those weren't available in the build session, so nothing has been deployed. Steps are in `docs/DEPLOYMENT.md` (setup A).
 - **AI provider key** — without `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` the app uses the extractive provider. LLM paths are covered by tests with a mock provider but haven't been run against a live model.
 - **Stripe** — test-mode keys, three prices and a webhook are needed for real checkout. The Stripe paths are tested against a mocked Stripe API.
 
 **Not implemented (documented as limitations):**
 
 - Email delivery (invitation emails, password reset, email verification).
-- Horizontal scaling: realtime bus and rate limits are in memory (single API instance).
+- Horizontal scaling on Node: realtime bus and rate limits are in memory (single API instance). On Workers realtime scales out, but rate limits are per isolate.
 - Embedding-based retrieval (current retrieval is Postgres full-text search).
 - Chat attachments; multi-factor authentication; nonce-based CSP for the web app.
 - Error monitoring integration (recommended in the deployment guide).

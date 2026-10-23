@@ -53,7 +53,7 @@ Key decisions are explained in the [architecture document](ARCHITECTURE.md): why
 ## Security considerations
 
 - **Tenant isolation** on every query, verified by tests that try to read, change and delete another workspace's conversations, tickets, articles, customers and settings — all return 404.
-- **Server-side sessions** (hashed tokens, httpOnly SameSite cookies), argon2id passwords, CSRF origin checks, rate limits.
+- **Server-side sessions** (hashed tokens, httpOnly SameSite cookies), bcrypt passwords (hashed in Postgres), CSRF origin checks, rate limits.
 - **Prompt-injection resistance:** untrusted text is escaped and wrapped as data; deterministic guards hold back replies that touch money or accounts, include unknown links or make promises; internal notes never reach the model.
 - **Widget:** origin allow-list enforced from the browser's `Origin` header, public keys that can't open the dashboard, spam controls, and text-only rendering.
 - **Billing:** the plan changes only on a signature-verified Stripe webhook; test billing is refused in production.
@@ -62,7 +62,7 @@ Full list: [security checklist](SECURITY.md).
 
 ## Quality
 
-- 120 unit and integration tests: 102 API tests against a real PostgreSQL database (auth, tenant isolation, roles, AI failure handling, widget security, realtime, billing webhooks, analytics), plus widget and shared-package tests.
+- 123 unit and integration tests: 105 API tests against a real PostgreSQL database (auth, tenant isolation, roles, AI failure handling, widget security, realtime, billing webhooks, analytics), plus widget and shared-package tests.
 - 20 Playwright end-to-end tests, including a full journey from sign-up to an AI reply, a realtime handoff to an agent, a ticket and a customer rating, plus axe accessibility checks and phone-width layout checks.
 - TypeScript strict mode and ESLint across the monorepo; the colour palette for charts was validated for colour-vision deficiency and contrast.
 

@@ -1,19 +1,99 @@
 # Deployment
 
-Target setup: **Neon** (PostgreSQL) → **Render** (API) → **Vercel** (web app). Each step lists what to set. Nothing here has been deployed yet; the API's production build, migrations and startup checks have been verified locally.
+Two supported setups:
 
-## 1. Database — Neon
+- **A. Cloudflare Workers + Neon** — both apps on Workers, Postgres on Neon, reached through Hyperdrive. Fits the free plans of both.
+- **B. Render + Vercel + Neon** — the API as a Node service, the web app on Vercel.
+
+Nothing here has been deployed yet. Setup A has been verified locally in `workerd` (the Workers runtime) with both Workers running against Postgres: the full Playwright suite (20 tests) passes against them. Setup B's production build, migrations and startup checks have been verified locally.
+
+## A. Cloudflare Workers + Neon
+
+You need a Cloudflare account (free plan), a Neon project (free plan) and, on the machine you deploy from, either `npx wrangler login` or a `CLOUDFLARE_API_TOKEN` with **Workers Scripts: Edit** and **Hyperdrive: Edit**, plus `CLOUDFLARE_ACCOUNT_ID`. Your `workers.dev` subdomain is under **Workers & Pages → Settings**; the URLs below use `<sub>` for it.
+
+### A1. Database
+
+1. In Neon, create a project (Postgres 16+) and copy the **direct** connection string (not the `-pooler` host; Hyperdrive does the pooling). It must end with `?sslmode=require`.
+2. Apply migrations and create the homepage demo workspace from your machine:
+   ```bash
+   cd demos/supportflow
+   DATABASE_URL="postgres://…?sslmode=require" pnpm db:migrate
+   DATABASE_URL="postgres://…?sslmode=require" pnpm demo:setup   # prints NEXT_PUBLIC_DEMO_WIDGET_KEY=pk_…
+   ```
+   Migration `0001` enables `pgcrypto`, which Neon supports. Never run `pnpm db:seed` against production.
+3. Create the Hyperdrive config and copy its id into `apps/api/wrangler.jsonc` (`hyperdrive[0].id`):
+   ```bash
+   cd apps/api
+   npx wrangler hyperdrive create supportflow-db --connection-string="postgres://…?sslmode=require"
+   ```
+
+### A2. API Worker
+
+1. In `apps/api/wrangler.jsonc`, set `vars.WEB_ORIGIN` to `https://supportflow-web.<sub>.workers.dev` and `vars.API_PUBLIC_URL` to `https://supportflow-api.<sub>.workers.dev`.
+2. Set secrets (each command prompts for the value):
+   ```bash
+   openssl rand -base64 32          # use this for PROXY_SHARED_SECRET
+   npx wrangler secret put PROXY_SHARED_SECRET
+   npx wrangler secret put ANTHROPIC_API_KEY   # optional; without it the extractive fallback answers from articles
+   ```
+   With no AI key the API uses the extractive fallback automatically. Billing stays `disabled` unless you configure [Stripe](#stripe-optional) (the same variables, set as secrets).
+3. Build the widget and deploy:
+   ```bash
+   cd demos/supportflow && pnpm --filter @supportflow/widget build
+   cd apps/api && pnpm worker:deploy
+   ```
+   This deploys the Worker, the `RealtimeHub` Durable Object (SQLite-backed, available on the free plan), static `widget.js`, and the hourly Cron Trigger.
+4. Check `https://supportflow-api.<sub>.workers.dev/health/ready` returns `{"status":"ok","database":"ok",…}`.
+
+### A3. Web Worker
+
+1. In `apps/web/wrangler.jsonc`, set `vars.API_INTERNAL_URL` to the API Worker URL.
+2. `cd apps/web && npx wrangler secret put PROXY_SHARED_SECRET` (the same value as the API).
+3. Build and deploy. `NEXT_PUBLIC_*` values are baked in at build time:
+   ```bash
+   NEXT_PUBLIC_API_URL=https://supportflow-api.<sub>.workers.dev \
+   NEXT_PUBLIC_SITE_URL=https://supportflow-web.<sub>.workers.dev \
+   NEXT_PUBLIC_DEMO_WIDGET_KEY=pk_… NEXT_PUBLIC_BILLING_MODE=disabled \
+   pnpm cf:deploy
+   ```
+
+### A4. Verify
+
+- Run the end-to-end suite against the live site: `E2E_BASE_URL=https://supportflow-web.<sub>.workers.dev npx playwright test`. Note that it creates test workspaces in the database, and the billing tests expect `BILLING_MODE=test`, which production refuses, so expect those to fail there.
+- By hand: register a workspace, publish an article, open **Chat widget**, send a message from the preview, and watch it arrive in the inbox in real time.
+
+### Trying it locally in the Workers runtime
+
+```bash
+cp apps/api/.dev.vars.example apps/api/.dev.vars   # then fill in PROXY_SHARED_SECRET
+cp apps/web/.dev.vars.example apps/web/.dev.vars   # same secret
+cd apps/api && pnpm worker:dev                     # http://localhost:8787, uses local Postgres via localConnectionString
+cd apps/web && NEXT_PUBLIC_API_URL=http://127.0.0.1:8787 NEXT_PUBLIC_DEMO_WIDGET_KEY=pk_… \
+  NEXT_PUBLIC_SITE_URL=http://localhost:8788 NEXT_PUBLIC_BILLING_MODE=test pnpm cf:build && npx wrangler dev --port 8788
+E2E_BASE_URL=http://localhost:8788 npx playwright test
+```
+
+### Free-plan limits to know
+
+- **Workers:** 100,000 requests a day across both Workers, and 10 ms of CPU per request. Password hashing runs in Postgres for this reason. CPU time per request hasn't been measured on Cloudflare yet (the local runtime doesn't enforce it); check the Worker's metrics after deploying, and move to the paid plan if requests exceed it.
+- **Durable Objects:** one request per realtime event per channel, and WebSocket messages count toward the daily request allowance.
+- **Neon:** the database suspends when idle, so the first request after a quiet period takes longer.
+- **Rate limits** are kept per isolate, so they are looser than on a single Node server (see `docs/SECURITY.md`).
+
+## B. Render + Vercel + Neon
+
+### B1. Database — Neon
 
 1. Create a Neon project (Postgres 16+) and a database, for example `supportflow`.
 2. Copy the **pooled** connection string and make sure it ends with `?sslmode=require`. This is `DATABASE_URL`.
-3. Migrations run automatically on each Render deploy (step 2). To run them by hand:
+3. Migrations run automatically on each Render deploy (step B2). To run them by hand:
    ```bash
    cd demos/supportflow
    DATABASE_URL="postgres://…?sslmode=require" pnpm db:migrate
    ```
 4. Never run `pnpm db:seed` against production; it refuses when `NODE_ENV=production`.
 
-## 2. API — Render
+### B2. API — Render
 
 1. In Render choose **New → Blueprint**, select this repository and set the blueprint path to `demos/supportflow/render.yaml`.
 2. Fill in the values marked "sync: false":
@@ -27,7 +107,7 @@ Target setup: **Neon** (PostgreSQL) → **Render** (API) → **Vercel** (web app
 | `AI_PROVIDER` | `anthropic`, `openai` or `extractive` (no key needed) |
 | `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` | As needed. For OpenAI also set `AI_MODEL`. Anthropic defaults to `claude-opus-5-5`; set `AI_MODEL` to change it. |
 | `BILLING_MODE` | `disabled` until Stripe is configured, then `stripe`. `test` is refused in production. |
-| `STRIPE_*` | See step 4 |
+| `STRIPE_*` | See [Stripe](#stripe-optional) |
 
 3. Deploy. The build runs `pnpm install`, builds the widget and the API; `preDeployCommand` applies migrations; the health check uses `/health/ready`.
 4. Create the homepage demo workspace once (Render shell):
@@ -38,7 +118,7 @@ Target setup: **Neon** (PostgreSQL) → **Render** (API) → **Vercel** (web app
 
 The API holds WebSocket connections and in-memory rate limits, so run **one instance** (or add Redis / Postgres `LISTEN/NOTIFY` first; see the architecture document). Render's free plan sleeps when idle, which drops WebSockets and delays the first request; use a paid instance for real traffic.
 
-## 3. Web — Vercel
+### B3. Web — Vercel
 
 1. Import the repository in Vercel. Set **Root Directory** to `demos/supportflow/apps/web` and enable "Include files outside the root directory". `vercel.json` installs from the workspace root with pnpm.
 2. Environment variables (Production and Preview):
@@ -48,13 +128,13 @@ The API holds WebSocket connections and in-memory rate limits, so run **one inst
 | `API_INTERNAL_URL` | The Render API URL (used server-side by the `/api` proxy) |
 | `NEXT_PUBLIC_API_URL` | The Render API URL (WebSockets and the widget script) |
 | `PROXY_SHARED_SECRET` | Same value as on Render |
-| `NEXT_PUBLIC_DEMO_WIDGET_KEY` | From step 2.4 |
+| `NEXT_PUBLIC_DEMO_WIDGET_KEY` | From step B2.4 |
 | `NEXT_PUBLIC_SITE_URL` | The public site URL (metadata, sitemap) |
 | `NEXT_PUBLIC_BILLING_MODE` | `stripe` or `disabled` (controls the note on the pricing page) |
 
 3. Deploy, then add the final Vercel URL to `WEB_ORIGIN` on Render if it changed, and redeploy the API.
 
-## 4. Stripe (optional)
+## Stripe (optional)
 
 1. In Stripe test mode, create three recurring monthly prices (Starter $29, Pro $79, Business $199) and copy their price IDs into `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PRO` and `STRIPE_PRICE_BUSINESS`.
 2. Add a webhook endpoint `https://<api>/billing/webhook` with events `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated` and `customer.subscription.deleted`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
@@ -62,12 +142,12 @@ The API holds WebSocket connections and in-memory rate limits, so run **one inst
 4. Enable the Customer Portal in Stripe settings (plan changes and cancellation).
 5. Verify with a test card (`4242 4242 4242 4242`): the plan should change on the Billing page only after the webhook arrives. Use live keys only after reviewing pricing, tax and terms.
 
-## 5. Verify the deployment
+## Verify a Render + Vercel deployment
 
 - `GET https://<api>/health/ready` → `{"status":"ok","database":"ok",…}`
 - Open the site, register a workspace, publish an article, add the site's origin under **Chat widget**, and send a message from the widget preview; it should appear in the inbox in real time.
-- The homepage demo should answer "How long does shipping take?".
-- Run the e2e suite against staging if needed by adapting `playwright.config.ts`'s `baseURL`.
+- The homepage demo should answer "How long does shipping take to Europe?" from the "Shipping times and costs" article. (The extractive fallback hands loosely matched questions to the team rather than guessing; an AI key answers more freely.)
+- Run the e2e suite against staging with `E2E_BASE_URL=https://… npx playwright test`.
 
 ## Logging and monitoring recommendations
 
@@ -80,4 +160,4 @@ The API holds WebSocket connections and in-memory rate limits, so run **one inst
 
 ## Costs
 
-Neon and Vercel have free tiers suitable for a demo. Render web services that stay awake and support WebSockets are paid. AI providers and Stripe bill per use. Nothing in this repository creates paid resources automatically.
+Cloudflare Workers (with Durable Objects and Hyperdrive) and Neon have free plans that cover a demo (setup A). Vercel has a free tier too; Render web services that stay awake and support WebSockets are paid. AI providers and Stripe bill per use. Nothing in this repository creates paid resources automatically.

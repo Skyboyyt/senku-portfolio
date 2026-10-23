@@ -4,12 +4,12 @@ Status of each control, where it lives, and how it's verified. "Tested" means an
 
 ## Identity and sessions
 
-- [x] Passwords hashed with **argon2id** (19 MiB, t=2) — `lib/crypto.ts`. Minimum length 10.
+- [x] Passwords hashed with **bcrypt** (cost 11) in Postgres via `pgcrypto`, over a SHA-256 pre-hash so every character counts beyond bcrypt's 72-byte limit — `lib/crypto.ts`, tested. Hashing in the database keeps it off the Cloudflare Worker's 10 ms CPU budget. Minimum length 10.
 - [x] Login doesn't reveal whether an email exists (same message, dummy hash verification for unknown emails) — tested.
 - [x] Session tokens are 256-bit random values; only their **SHA-256** is stored — tested.
 - [x] Cookie: `httpOnly`, `SameSite=Lax`, `Secure` in production, `Path=/` — tested.
 - [x] Sliding 30-day expiry; logout deletes the session; password change signs out other devices — tested.
-- [x] Login, registration, invitation and password endpoints are rate limited — tested.
+- [x] Login, registration, invitation and password endpoints are rate limited — tested. Limits are held in memory: per process on Node, and per isolate on Cloudflare Workers, where they are weaker because requests spread across isolates and locations. For real traffic on Workers, add Cloudflare's rate limiting rules or the rate-limit binding in front of these routes.
 - [ ] Password reset by email and email verification — not implemented (no email provider). Documented limitation.
 - [ ] Multi-factor authentication — not implemented.
 
@@ -76,3 +76,11 @@ Status of each control, where it lives, and how it's verified. "Tested" means an
 - [ ] Add error monitoring (e.g. Sentry) and uptime checks on `/health/ready` after deployment.
 - [ ] Run `pnpm audit` in CI and keep dependencies updated.
 - [ ] Invitation links appear in URLs (single-use, 7-day expiry). Avoid logging full request paths in production log drains if that matters for your threat model.
+
+## Cloudflare Workers runtime
+
+- [x] Dashboard WebSocket tickets are **HMAC-signed** (key derived from `PROXY_SHARED_SECRET`), expire after 60 seconds and are single use: the nonce is recorded where the socket is accepted (in-process on Node, in the workspace's Durable Object on Workers) — tested.
+- [x] Widget sockets are authorised by the Worker before they reach the Durable Object: widget key, allowed origin, visitor token and conversation ownership, the same checks as on Node — verified with an end-to-end smoke test in `workerd`.
+- [x] Dashboard sockets are closed within a minute of a member's removal (Durable Object alarm re-checks memberships).
+- [x] The client IP is taken from `cf-connecting-ip`; any `X-Forwarded-For` sent by the client is replaced before the app sees it. The web proxy reads the header named in `CLIENT_IP_HEADER`, which is only set on Cloudflare.
+- [x] Secrets (`PROXY_SHARED_SECRET`, AI and Stripe keys) are Worker secrets, never `vars` in `wrangler.jsonc`.

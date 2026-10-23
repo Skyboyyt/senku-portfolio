@@ -42,7 +42,7 @@ export interface BuildOptions {
    * and publishes realtime events through a Durable Object. WebSockets are then accepted
    * by the Worker entry rather than by Fastify.
    */
-  runtime?: { resolveDb: () => Database; bus: RealtimePublisher };
+  runtime?: { resolveDb: () => Database; bus: RealtimePublisher; logStream?: { write(line: string): void } };
 }
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -52,6 +52,7 @@ export async function buildApp(options: BuildOptions): Promise<FastifyInstance> 
   const app = Fastify({
     logger: {
       level: config.LOG_LEVEL ?? (config.NODE_ENV === "test" ? "silent" : "info"),
+      ...(options.runtime?.logStream ? { stream: options.runtime.logStream } : {}),
       redact: {
         paths: [
           "req.headers.cookie",
@@ -66,6 +67,8 @@ export async function buildApp(options: BuildOptions): Promise<FastifyInstance> 
     // Trust exactly the configured number of reverse-proxy hops for request.ip.
     trustProxy: (_address: string, hop: number) => hop < config.TRUST_PROXY_HOPS,
     bodyLimit: 1_000_000,
+    // Plugin timeouts use timers, which Workers don't allow while starting up.
+    ...(options.runtime ? { pluginTimeout: 0 } : {}),
     disableRequestLogging: config.NODE_ENV === "test",
   });
 

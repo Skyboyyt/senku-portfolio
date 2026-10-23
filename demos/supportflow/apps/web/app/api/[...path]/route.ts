@@ -7,6 +7,8 @@ import type { NextRequest } from "next/server";
  */
 const API = (process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000").replace(/\/$/, "");
 const SECRET = process.env.PROXY_SHARED_SECRET;
+/** Set to the one header the host itself writes (cf-connecting-ip on Cloudflare); clients can't forge it there. */
+const CLIENT_IP_HEADER = process.env.CLIENT_IP_HEADER?.toLowerCase();
 
 const FORWARD_REQUEST_HEADERS = ["cookie", "content-type", "origin", "user-agent", "accept", "stripe-signature"];
 const FORWARD_RESPONSE_HEADERS = ["content-type", "cache-control", "retry-after", "x-ratelimit-limit", "x-ratelimit-remaining", "x-ratelimit-reset"];
@@ -23,7 +25,9 @@ async function handle(request: NextRequest, { params }: { params: Promise<{ path
   }
   if (SECRET) {
     headers.set("x-sf-proxy-secret", SECRET);
-    const ip = request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const ip = CLIENT_IP_HEADER
+      ? request.headers.get(CLIENT_IP_HEADER)
+      : (request.headers.get("x-real-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim());
     if (ip) headers.set("x-sf-client-ip", ip);
   }
 

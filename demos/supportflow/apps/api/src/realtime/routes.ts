@@ -17,16 +17,7 @@ const MEMBERSHIP_RECHECK_MS = 60_000;
  * accepted by a Durable Object instead (see `worker.ts`), so only the ticket route is used.
  */
 export function realtimeRoutes(ctx: AppContext, localBus: RealtimeBus | null): FastifyPluginAsync {
-  const usedNonces = new Map<string, number>();
-  const sweep = setInterval(() => {
-    const now = Date.now();
-    for (const [nonce, expires] of usedNonces) if (expires < now) usedNonces.delete(nonce);
-  }, 30_000);
-  sweep.unref?.();
-
   return async (app) => {
-    app.addHook("onClose", async () => clearInterval(sweep));
-
     app.post("/realtime/ticket", async (request) => {
       const member = await requireMember(ctx, request);
       return {
@@ -36,6 +27,14 @@ export function realtimeRoutes(ctx: AppContext, localBus: RealtimeBus | null): F
     });
 
     if (!localBus) return;
+
+    const usedNonces = new Map<string, number>();
+    const sweep = setInterval(() => {
+      const now = Date.now();
+      for (const [nonce, expires] of usedNonces) if (expires < now) usedNonces.delete(nonce);
+    }, 30_000);
+    sweep.unref();
+    app.addHook("onClose", async () => clearInterval(sweep));
 
     app.get("/realtime", { websocket: true }, (socket, request) => {
       const origin = request.headers.origin;

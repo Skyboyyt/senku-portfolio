@@ -1,0 +1,19 @@
+// SupportFlow web app on Cloudflare Workers (free plan), built with OpenNext.
+// See docs/DEPLOYMENT.md.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "supportflow-web",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  // global_fetch_strictly_public lets this Worker call the API Worker on workers.dev.
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  // NEXT_PUBLIC_API_URL and NEXT_PUBLIC_DEMO_WIDGET_KEY are read at build time.
+  // PROXY_SHARED_SECRET is a secret: `wrangler secret put PROXY_SHARED_SECRET`.
+  "vars": {
+    "API_INTERNAL_URL": "https://supportflow-api.example.workers.dev",
+    "CLIENT_IP_HEADER": "cf-connecting-ip"
+  }
+}
