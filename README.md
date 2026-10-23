@@ -14,6 +14,14 @@ To host elsewhere, upload the contents of this folder and preserve the folder st
 - assets/: portrait and any future project screenshots.
 - demos/pulse-grid/: Pulse Grid, a Web Audio drum machine with shareable links and WAV export. See its README.
 
+## Live demo sites
+Each demo is also deployed as its own Vercel project from this repository (Root Directory set to the demo folder), and the portfolio buttons link to these addresses:
+- Pulse Grid: https://pulse-grid-rosy.vercel.app/ (`demos/pulse-grid`)
+- Studio Desk: https://studio-desk-eosin.vercel.app/ (`demos/studio-desk`)
+- Fieldwork: https://fieldwork-olive.vercel.app/ (`demos/fieldwork`)
+
+Links from the demos back to the portfolio point at https://senku-portfolio.vercel.app/.
+
 ## Your portrait
 The hero picture is your avatar: `assets/avatar.jpg` (a hooded figure in a glowing green neon mask). To change it, replace that file or update the `.portrait` image in index.html. It uses object-fit: cover, so a square image is cropped slightly at the sides to fit the arched frame; adjust object-position on .portrait in styles.css to change the focal point. The image is 361×361, so a larger version (at least 900px wide) will look sharper on high-resolution screens. A monogram fallback shows if the image cannot load.
 
