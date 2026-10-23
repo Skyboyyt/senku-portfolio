@@ -12,6 +12,7 @@ To host elsewhere, upload the contents of this folder and preserve the folder st
 - styles.css: responsive layouts, light/dark theme tokens, and motion.
 - script.js: theme initialization, accessible menu, theme persistence, portrait fallback, spotlight, reveals, current year.
 - assets/: portrait and any future project screenshots.
+- demos/pulse-grid/: Pulse Grid, a Web Audio drum machine with shareable links and WAV export. See its README.
 
 ## Your portrait
 The hero picture is your avatar: `assets/avatar.jpg` (a hooded figure in a glowing green neon mask). To change it, replace that file or update the `.portrait` image in index.html. It uses object-fit: cover, so a square image is cropped slightly at the sides to fit the arched frame; adjust object-position on .portrait in styles.css to change the focal point. The image is 361×361, so a larger version (at least 900px wide) will look sharper on high-resolution screens. A monogram fallback shows if the image cannot load.
