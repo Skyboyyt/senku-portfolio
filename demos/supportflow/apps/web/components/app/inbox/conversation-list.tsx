@@ -3,7 +3,7 @@
 import { Bot, Inbox, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 import type { ConversationListItemDto, Paginated } from "@supportflow/shared";
 import { Avatar } from "@/components/ui/avatar";
@@ -14,6 +14,7 @@ import { EmptyState, ErrorState } from "@/components/ui/states";
 import { errorMessage } from "@/lib/api";
 import { useDebounced } from "@/lib/hooks";
 import { cn, customerLabel, relativeTime } from "@/lib/utils";
+import { useRealtime } from "../realtime";
 import { useSession } from "../session";
 
 export const VIEWS = {
@@ -46,6 +47,15 @@ export function ConversationList({ selectedId }: { selectedId: string | null }) 
   const { data, error, size, setSize, isLoading, isValidating, mutate } = useSWRInfinite<Paginated<ConversationListItemDto>>(getKey, {
     revalidateFirstPage: true,
   });
+  const { subscribe } = useRealtime();
+  // Revalidate the loaded pages whenever a conversation changes.
+  useEffect(
+    () =>
+      subscribe((event) => {
+        if (event.type !== "ticket.updated") void mutate();
+      }),
+    [subscribe, mutate],
+  );
   const items = data?.flatMap((page) => page.items) ?? [];
   const hasMore = Boolean(data?.at(-1)?.nextCursor);
 

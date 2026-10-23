@@ -327,6 +327,8 @@ export class SupportFlowWidget {
     socket.onopen = () => {
       this.socketRetries = 0;
       this.stopPolling();
+      // Anything sent before the socket subscribed (e.g. a fast AI reply) is fetched now.
+      void this.sync();
     };
     socket.onmessage = (e) => {
       try {
@@ -353,15 +355,19 @@ export class SupportFlowWidget {
 
   private startPolling() {
     if (this.pollTimer || (!this.isOpen && this.options.mode !== "inline")) return;
-    this.pollTimer = setInterval(async () => {
-      try {
-        const session = await this.request<WidgetSessionDto>("/session", {});
-        this.conversation = session.conversation;
-        for (const m of session.messages) this.addMessage(m);
-      } catch {
-        // Keep the last state; the next tick retries.
-      }
-    }, 5000);
+    this.pollTimer = setInterval(() => void this.sync(), 5000);
+  }
+
+  /** Merges the server's view of the conversation into local state. */
+  private async sync() {
+    try {
+      const session = await this.request<WidgetSessionDto>("/session", {});
+      if (session.conversation) this.conversation = session.conversation;
+      for (const m of session.messages) this.addMessage(m);
+      this.renderMessages();
+    } catch {
+      // Keep the last state; the next attempt retries.
+    }
   }
 
   private stopPolling() {

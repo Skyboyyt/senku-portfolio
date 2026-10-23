@@ -59,6 +59,7 @@ export function InviteView({ token }: { token: string }) {
     setFormError(null);
     try {
       await api("/invitations/accept", { body: { token } });
+      await session.mutate();
       router.replace("/app");
     } catch (error) {
       setFormError(errorMessage(error));
@@ -77,6 +78,8 @@ export function InviteView({ token }: { token: string }) {
     setPending(true);
     try {
       await api("/invitations/register", { body: parsed.data });
+      // Replace the signed-out session cached on this page before entering the dashboard.
+      await session.mutate();
       router.replace("/app?welcome=1");
     } catch (error) {
       setPending(false);
@@ -128,7 +131,7 @@ export function InviteView({ token }: { token: string }) {
       <form onSubmit={registerAndJoin} noValidate className="space-y-4">
         <FormError message={formError} />
         <Field label="Email">
-          <Input value={info.email} readOnly disabled />
+          <Input value={info.email} readOnly disabled autoComplete="username" />
         </Field>
         <Field label="Your name" error={errors.name}>
           <Input name="name" autoComplete="name" required autoFocus maxLength={80} />

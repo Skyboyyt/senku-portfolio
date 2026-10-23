@@ -26,7 +26,13 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Dropdown, DropdownContent, DropdownItem, DropdownSeparator, DropdownTrigger } from "@/components/ui/dropdown";
+import {
+  Dropdown,
+  DropdownContent,
+  DropdownItem,
+  DropdownSeparator,
+  DropdownTrigger,
+} from "@/components/ui/dropdown";
 import { Select, Textarea } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/states";
@@ -80,7 +86,9 @@ export function ConversationThread({ id }: { id: string }) {
     return (
       <div className="grid h-full place-items-center">
         <ErrorState
-          message={notFound ? "This conversation doesn't exist or was deleted." : errorMessage(error)}
+          message={
+            notFound ? "This conversation doesn't exist or was deleted." : errorMessage(error)
+          }
           onRetry={notFound ? undefined : () => void mutate()}
         />
       </div>
@@ -103,18 +111,27 @@ export function ConversationThread({ id }: { id: string }) {
   const suggestion = c.suggestions[0] ?? null;
 
   const setStatus = (status: ConversationStatus) =>
-    act(() => api(`/conversations/${id}`, { method: "PATCH", body: { status } }), status === "resolved" ? "Conversation resolved" : undefined);
+    act(
+      () => api(`/conversations/${id}`, { method: "PATCH", body: { status } }),
+      status === "resolved" ? "Conversation resolved" : undefined,
+    );
 
   return (
     <div className="flex h-full">
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header */}
         <div className="flex items-center gap-2 border-b border-border px-3 py-2.5 sm:px-5">
-          <Link href={`/app/inbox?view=${view}`} className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")} aria-label="Back to inbox">
+          <Link
+            href={`/app/inbox?view=${view}`}
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")}
+            aria-label="Back to inbox"
+          >
             <ArrowLeft aria-hidden />
           </Link>
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-[15px] font-semibold text-text">{customerLabel(c.customer)}</h2>
+            <h2 className="truncate text-[15px] font-semibold text-text">
+              {customerLabel(c.customer)}
+            </h2>
             <p className="truncate text-xs text-subtle">
               {c.customer.email ?? "No email given"} · started {relativeTime(c.createdAt)}
             </p>
@@ -123,13 +140,22 @@ export function ConversationThread({ id }: { id: string }) {
             aria-label="Assignee"
             value={c.assignee?.id ?? ""}
             onChange={(e) =>
-              void act(() => api(`/conversations/${id}`, { method: "PATCH", body: { assigneeId: e.target.value || null } }), "Assignee updated")
+              void act(
+                () =>
+                  api(`/conversations/${id}`, {
+                    method: "PATCH",
+                    body: { assigneeId: e.target.value || null },
+                  }),
+                "Assignee updated",
+              )
             }
             className="hidden h-8 w-40 text-[13px] lg:block"
           >
             <option value="">Unassigned</option>
             {members?.map((m) => (
-              <option key={m.userId} value={m.userId}>{m.userId === session.user.id ? `${m.name} (you)` : m.name}</option>
+              <option key={m.userId} value={m.userId}>
+                {m.userId === session.user.id ? `${m.name} (you)` : m.name}
+              </option>
             ))}
           </Select>
           {c.status !== "resolved" ? (
@@ -142,21 +168,42 @@ export function ConversationThread({ id }: { id: string }) {
             </Button>
           )}
           <Dropdown>
-            <DropdownTrigger className={buttonVariants({ variant: "ghost", size: "icon-sm" })} aria-label="More actions">
+            <DropdownTrigger
+              className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+              aria-label="More actions"
+            >
               <MoreHorizontal aria-hidden />
             </DropdownTrigger>
             <DropdownContent>
               {c.status === "open" && (
-                <DropdownItem onSelect={() => void setStatus("pending")}>Mark as pending</DropdownItem>
+                <DropdownItem onSelect={() => void setStatus("pending")}>
+                  Mark as pending
+                </DropdownItem>
               )}
-              {c.status === "pending" && <DropdownItem onSelect={() => void setStatus("open")}>Mark as open</DropdownItem>}
+              {c.status === "pending" && (
+                <DropdownItem onSelect={() => void setStatus("open")}>Mark as open</DropdownItem>
+              )}
               {c.aiActive ? (
-                <DropdownItem onSelect={() => void act(() => api(`/conversations/${id}/takeover`, { body: {} }), "You've taken over")}>
+                <DropdownItem
+                  onSelect={() =>
+                    void act(
+                      () => api(`/conversations/${id}/takeover`, { body: {} }),
+                      "You've taken over",
+                    )
+                  }
+                >
                   <Hand /> Take over from AI
                 </DropdownItem>
               ) : (
                 aiMode !== "off" && (
-                  <DropdownItem onSelect={() => void act(() => api(`/conversations/${id}/ai/resume`, { body: {} }), "AI can help again")}>
+                  <DropdownItem
+                    onSelect={() =>
+                      void act(
+                        () => api(`/conversations/${id}/ai/resume`, { body: {} }),
+                        "AI can help again",
+                      )
+                    }
+                  >
                     <Bot /> Let AI help again
                   </DropdownItem>
                 )
@@ -177,10 +224,16 @@ export function ConversationThread({ id }: { id: string }) {
           <div
             className={cn(
               "flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-4 py-2.5 text-[13px] sm:px-5",
-              c.needsHuman ? "border-warning/25 bg-warning-soft text-warning" : "border-ai-border bg-ai-soft text-ai",
+              c.needsHuman
+                ? "border-warning/25 bg-warning-soft text-warning"
+                : "border-ai-border bg-ai-soft text-ai",
             )}
           >
-            {c.needsHuman ? <Hand className="size-4 shrink-0" aria-hidden /> : <Bot className="size-4 shrink-0" aria-hidden />}
+            {c.needsHuman ? (
+              <Hand className="size-4 shrink-0" aria-hidden />
+            ) : (
+              <Bot className="size-4 shrink-0" aria-hidden />
+            )}
             <p className="flex-1 font-medium">
               {c.needsHuman
                 ? "Waiting for a person. The AI has stopped replying."
@@ -191,7 +244,16 @@ export function ConversationThread({ id }: { id: string }) {
                     : "AI drafts are available on request."}
             </p>
             {c.aiActive && aiMode === "auto" && (
-              <Button size="sm" variant="secondary" onClick={() => void act(() => api(`/conversations/${id}/takeover`, { body: {} }), "You've taken over")}>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() =>
+                  void act(
+                    () => api(`/conversations/${id}/takeover`, { body: {} }),
+                    "You've taken over",
+                  )
+                }
+              >
                 Take over
               </Button>
             )}
@@ -199,7 +261,13 @@ export function ConversationThread({ id }: { id: string }) {
         )}
 
         {/* Messages */}
-        <div ref={logRef} className="flex-1 overflow-y-auto px-4 py-5 sm:px-6" role="log" aria-label="Messages" aria-live="polite">
+        <div
+          ref={logRef}
+          className="flex-1 overflow-y-auto px-4 py-5 sm:px-6"
+          role="log"
+          aria-label="Messages"
+          aria-live="polite"
+        >
           <ol className="mx-auto flex max-w-3xl flex-col gap-4">
             {c.messages.map((m) => (
               <MessageItem key={m.id} message={m} />
@@ -207,19 +275,37 @@ export function ConversationThread({ id }: { id: string }) {
           </ol>
         </div>
 
-        {suggestion && <SuggestionCard conversationId={id} suggestion={suggestion} onDone={() => void mutate()} />}
+        {suggestion && (
+          <SuggestionCard
+            conversationId={id}
+            suggestion={suggestion}
+            onDone={() => void mutate()}
+          />
+        )}
 
-        <Composer conversationId={id} aiAvailable={aiMode !== "off"} hasSuggestion={Boolean(suggestion)} onSent={() => void mutate()} />
+        <Composer
+          conversationId={id}
+          aiAvailable={aiMode !== "off"}
+          hasSuggestion={Boolean(suggestion)}
+          onSent={() => void mutate()}
+        />
       </div>
 
       <aside
         aria-label="Conversation details"
         className={cn(
           "w-[300px] shrink-0 overflow-y-auto border-l border-border bg-bg",
-          showDetails ? "fixed inset-y-0 right-0 z-40 shadow-lg xl:static xl:shadow-none" : "hidden xl:block",
+          showDetails
+            ? "fixed inset-y-0 right-0 z-40 shadow-lg xl:static xl:shadow-none"
+            : "hidden xl:block",
         )}
       >
-        <ConversationDetails conversation={c} onChange={() => void mutate()} onClose={() => setShowDetails(false)} onCreateTicket={() => setTicketOpen(true)} />
+        <ConversationDetails
+          conversation={c}
+          onChange={() => void mutate()}
+          onClose={() => setShowDetails(false)}
+          onCreateTicket={() => setTicketOpen(true)}
+        />
       </aside>
 
       <CreateTicketDialog
@@ -229,7 +315,9 @@ export function ConversationThread({ id }: { id: string }) {
         defaultTitle={c.lastMessagePreview.slice(0, 120)}
         onCreated={() => void mutate()}
       />
-      <span className="sr-only" aria-live="polite">{c.status === "resolved" ? "Conversation resolved" : ""}</span>
+      <span className="sr-only" aria-live="polite">
+        {c.status === "resolved" ? "Conversation resolved" : ""}
+      </span>
     </div>
   );
 }
@@ -251,7 +339,10 @@ function MessageItem({ message: m }: { message: MessageDto }) {
       {fromCustomer ? (
         <Avatar name="Customer" className="mt-5 size-7" />
       ) : isAi ? (
-        <span className="mt-5 grid size-7 shrink-0 place-items-center rounded-full bg-ai-soft text-ai ring-1 ring-ai-border" aria-hidden>
+        <span
+          className="mt-5 grid size-7 shrink-0 place-items-center rounded-full bg-ai-soft text-ai ring-1 ring-ai-border"
+          aria-hidden
+        >
           <Bot className="size-3.5" />
         </span>
       ) : (
@@ -279,7 +370,8 @@ function MessageItem({ message: m }: { message: MessageDto }) {
             "whitespace-pre-wrap break-words rounded-lg px-3.5 py-2.5 text-[14.5px] leading-relaxed",
             fromCustomer && "rounded-tl-sm bg-surface-2 text-text",
             m.authorType === "agent" && !m.internal && "rounded-tr-sm bg-primary text-primary-fg",
-            m.internal && "rounded-tr-sm border border-dashed border-warning/50 bg-warning-soft text-text",
+            m.internal &&
+              "rounded-tr-sm border border-dashed border-warning/50 bg-warning-soft text-text",
             isAi && "rounded-tr-sm border border-ai-border bg-ai-soft text-text",
           )}
         >
@@ -289,7 +381,11 @@ function MessageItem({ message: m }: { message: MessageDto }) {
           <p className="mt-1 flex flex-wrap items-center gap-1 px-1 text-xs text-subtle">
             <FileText className="size-3" aria-hidden /> Sources:
             {m.aiSources.map((s, i) => (
-              <Link key={s.articleId} href={`/app/knowledge/${s.articleId}`} className="underline underline-offset-2 hover:text-text">
+              <Link
+                key={s.articleId}
+                href={`/app/knowledge/${s.articleId}`}
+                className="underline underline-offset-2 hover:text-text"
+              >
                 {s.title}
                 {i < m.aiSources!.length - 1 ? "," : ""}
               </Link>
@@ -301,7 +397,15 @@ function MessageItem({ message: m }: { message: MessageDto }) {
   );
 }
 
-function SuggestionCard({ conversationId, suggestion, onDone }: { conversationId: string; suggestion: SuggestionDto; onDone: () => void }) {
+function SuggestionCard({
+  conversationId,
+  suggestion,
+  onDone,
+}: {
+  conversationId: string;
+  suggestion: SuggestionDto;
+  onDone: () => void;
+}) {
   const toast = useToast();
   const [editing, setEditing] = useState(false);
   const [body, setBody] = useState(suggestion.body);
@@ -311,7 +415,9 @@ function SuggestionCard({ conversationId, suggestion, onDone }: { conversationId
   const send = async () => {
     setPending("send");
     try {
-      await api(`/conversations/${conversationId}/suggestions/${suggestion.id}/send`, { body: editing ? { body } : {} });
+      await api(`/conversations/${conversationId}/suggestions/${suggestion.id}/send`, {
+        body: editing ? { body } : {},
+      });
       toast(editing ? "Edited reply sent" : "AI reply sent");
       onDone();
     } catch (e) {
@@ -323,7 +429,9 @@ function SuggestionCard({ conversationId, suggestion, onDone }: { conversationId
   const discard = async () => {
     setPending("discard");
     try {
-      await api(`/conversations/${conversationId}/suggestions/${suggestion.id}/discard`, { body: {} });
+      await api(`/conversations/${conversationId}/suggestions/${suggestion.id}/discard`, {
+        body: {},
+      });
       onDone();
     } catch (e) {
       toast(errorMessage(e), "error");
@@ -334,31 +442,56 @@ function SuggestionCard({ conversationId, suggestion, onDone }: { conversationId
 
   const low = suggestion.confidence < 50;
   return (
-    <section aria-label="AI draft" className="border-t border-ai-border bg-ai-soft/60 px-4 py-3 sm:px-6">
+    <section
+      aria-label="AI draft"
+      className="border-t border-ai-border bg-ai-soft/60 px-4 py-3 sm:px-6"
+    >
       <div className="mx-auto max-w-3xl">
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <Badge tone="ai">
             <Sparkles aria-hidden /> AI draft
           </Badge>
-          <span className={cn("font-medium", low ? "text-warning" : "text-ai")}>{suggestion.confidence}% confidence</span>
+          <span className={cn("font-medium", low ? "text-warning" : "text-ai")}>
+            {suggestion.confidence}% confidence
+          </span>
           {suggestion.reason && <span className="text-muted">· {suggestion.reason}</span>}
         </div>
         {editing ? (
-          <Textarea value={body} onChange={(e) => setBody(e.target.value)} className="mt-2 min-h-28 bg-surface" aria-label="Edit AI draft" maxLength={5000} />
+          <Textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            className="mt-2 min-h-28 bg-surface"
+            aria-label="Edit AI draft"
+            maxLength={5000}
+          />
         ) : (
-          <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-[14.5px] leading-relaxed text-text">{suggestion.body}</p>
+          <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap text-[14.5px] leading-relaxed text-text">
+            {suggestion.body}
+          </p>
         )}
         {suggestion.sources.length > 0 && (
-          <p className="mt-1.5 text-xs text-muted">Based on: {suggestion.sources.map((s) => s.title).join(", ")}</p>
+          <p className="mt-1.5 text-xs text-muted">
+            Based on: {suggestion.sources.map((s) => s.title).join(", ")}
+          </p>
         )}
         <div className="mt-3 flex flex-wrap gap-2">
-          <Button size="sm" onClick={() => void send()} loading={pending === "send"} disabled={editing && !body.trim()}>
+          <Button
+            size="sm"
+            onClick={() => void send()}
+            loading={pending === "send"}
+            disabled={editing && !body.trim()}
+          >
             {editing ? "Send edited reply" : "Send"}
           </Button>
           <Button size="sm" variant="secondary" onClick={() => setEditing((v) => !v)}>
             {editing ? "Cancel edit" : "Edit"}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => void discard()} loading={pending === "discard"}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => void discard()}
+            loading={pending === "discard"}
+          >
             Discard
           </Button>
         </div>
@@ -390,7 +523,9 @@ function Composer({
     setSending(true);
     setError(null);
     try {
-      await api(`/conversations/${conversationId}/messages`, { body: { body, internal: mode === "note" } });
+      await api(`/conversations/${conversationId}/messages`, {
+        body: { body, internal: mode === "note" },
+      });
       setBody("");
       onSent();
     } catch (e) {
@@ -422,25 +557,37 @@ function Composer({
   return (
     <div className="border-t border-border bg-surface px-4 py-3 sm:px-6">
       <div className="mx-auto max-w-3xl">
-        <div className="mb-2 flex items-center gap-1" role="tablist" aria-label="Message type">
-          {(["reply", "note"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              role="tab"
-              aria-selected={mode === m}
-              onClick={() => setMode(m)}
-              className={cn(
-                "min-h-10 rounded-md px-3 text-[13px] font-medium sm:min-h-8",
-                mode === m ? (m === "note" ? "bg-warning-soft text-warning" : "bg-surface-3 text-text") : "text-muted hover:text-text",
-              )}
-            >
-              {m === "reply" ? "Reply to customer" : "Internal note"}
-            </button>
-          ))}
+        <div className="mb-2 flex items-center gap-1">
+          <div className="flex items-center gap-1" role="tablist" aria-label="Message type">
+            {(["reply", "note"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                role="tab"
+                aria-selected={mode === m}
+                onClick={() => setMode(m)}
+                className={cn(
+                  "min-h-10 rounded-md px-3 text-[13px] font-medium sm:min-h-8",
+                  mode === m
+                    ? m === "note"
+                      ? "bg-warning-soft text-warning"
+                      : "bg-surface-3 text-text"
+                    : "text-muted hover:text-text",
+                )}
+              >
+                {m === "reply" ? "Reply to customer" : "Internal note"}
+              </button>
+            ))}
+          </div>
           {aiAvailable && !hasSuggestion && mode === "reply" && (
             <Tooltip content="Draft a reply from your published articles">
-              <Button variant="ghost" size="sm" className="ml-auto text-ai hover:bg-ai-soft hover:text-ai" onClick={() => void suggest()} loading={drafting}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto text-ai hover:bg-ai-soft hover:text-ai"
+                onClick={() => void suggest()}
+                loading={drafting}
+              >
                 <Sparkles aria-hidden /> Suggest reply
               </Button>
             </Tooltip>
@@ -459,9 +606,16 @@ function Composer({
             placeholder={mode === "note" ? "Only your team will see this note" : "Write a reply…"}
             aria-label={mode === "note" ? "Internal note" : "Reply"}
             maxLength={5000}
-            className={cn("min-h-20 resize-y", mode === "note" && "border-warning/40 bg-warning-soft/40")}
+            className={cn(
+              "min-h-20 resize-y",
+              mode === "note" && "border-warning/40 bg-warning-soft/40",
+            )}
           />
-          {error && <p role="alert" className="mt-1.5 text-[13px] text-danger">{error}</p>}
+          {error && (
+            <p role="alert" className="mt-1.5 text-[13px] text-danger">
+              {error}
+            </p>
+          )}
           <div className="mt-2 flex items-center justify-between gap-2">
             <p className="hidden text-xs text-subtle sm:block">
               <kbd className="font-sans">Ctrl</kbd> + <kbd className="font-sans">Enter</kbd> to send
@@ -475,4 +629,3 @@ function Composer({
     </div>
   );
 }
-

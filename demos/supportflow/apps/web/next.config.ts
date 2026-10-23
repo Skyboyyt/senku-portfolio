@@ -21,6 +21,8 @@ const csp = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Lets the e2e suite build into its own directory alongside a dev server.
+  distDir: process.env.NEXT_DIST_DIR ?? ".next",
   poweredByHeader: false,
   agentRules: false,
   transpilePackages: ["@supportflow/shared"],

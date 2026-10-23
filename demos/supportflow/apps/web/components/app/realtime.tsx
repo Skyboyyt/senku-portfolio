@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useSWRConfig } from "swr";
 import type { RealtimeEvent } from "@supportflow/shared";
 import { api } from "@/lib/api";
@@ -34,16 +34,12 @@ export function RealtimeProvider({ orgId, children }: { orgId: string; children:
 
     const revalidate = (event: RealtimeEvent) => {
       if (event.type === "ticket.updated") {
-        void mutate((key) => typeof key === "string" && (key.startsWith("/tickets") || key.startsWith("$inf$/tickets")));
+        void mutate((key) => typeof key === "string" && key.startsWith("/tickets"));
         void mutate("/analytics/overview?days=30");
         return;
       }
-      // List pages use useSWRInfinite, whose cache keys carry a "$inf$" prefix.
-      void mutate(
-        (key) =>
-          typeof key === "string" &&
-          (key.startsWith("/conversations?") || key.startsWith("$inf$/conversations?") || key === "/conversations/counts"),
-      );
+      // Paginated lists (useSWRInfinite) aren't reached by filter mutations; they subscribe below.
+      void mutate((key) => typeof key === "string" && (key.startsWith("/conversations?") || key === "/conversations/counts"));
       void mutate(`/conversations/${event.conversationId}`);
     };
 
@@ -91,12 +87,15 @@ export function RealtimeProvider({ orgId, children }: { orgId: string; children:
     };
   }, [orgId, mutate]);
 
-  const subscribe = (listener: Listener) => {
+  const subscribe = useCallback((listener: Listener) => {
     listeners.current.add(listener);
-    return () => listeners.current.delete(listener);
-  };
+    return () => {
+      listeners.current.delete(listener);
+    };
+  }, []);
+  const value = useMemo(() => ({ status, subscribe }), [status, subscribe]);
 
-  return <RealtimeContext.Provider value={{ status, subscribe }}>{children}</RealtimeContext.Provider>;
+  return <RealtimeContext.Provider value={value}>{children}</RealtimeContext.Provider>;
 }
 
 export function useRealtime() {

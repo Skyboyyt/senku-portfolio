@@ -20,10 +20,11 @@ export function useSessionQuery() {
   const pathname = usePathname();
   const query = useSWR<SessionDto>("/auth/session", { revalidateOnFocus: true });
   useEffect(() => {
-    if (query.error instanceof ApiError && query.error.status === 401) {
+    // Act only on a settled 401, not a stale cached one that is being re-checked.
+    if (query.error instanceof ApiError && query.error.status === 401 && !query.isValidating) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [query.error, router, pathname]);
+  }, [query.error, query.isValidating, router, pathname]);
   return query;
 }
 

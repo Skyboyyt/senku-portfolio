@@ -177,7 +177,7 @@ function AiSettings({ org, disabled }: { org: OrgDto; disabled: boolean }) {
           {errors.aiMode && <p className="mt-2 text-[13px] text-danger">{errors.aiMode}</p>}
         </fieldset>
 
-        <div className={cn(mode !== "auto" && "opacity-60")}>
+        <div>
           <label htmlFor="threshold" className="flex items-baseline justify-between text-sm font-medium text-text">
             Confidence needed to reply automatically
             <span className="font-mono text-sm tabular-nums text-text">{threshold}%</span>
@@ -195,8 +195,8 @@ function AiSettings({ org, disabled }: { org: OrgDto; disabled: boolean }) {
             className="mt-3 h-11 w-full accent-[var(--primary)] sm:h-6"
           />
           <p id="threshold-hint" className="mt-1 text-[13px] text-muted">
-            Below this, the AI saves a draft and hands the conversation to your team. Refunds, billing and account
-            requests always go to a person regardless of confidence.
+            {mode === "auto" ? "" : "Applies when automatic replies are on. "}Below this, the AI saves a draft and hands the
+            conversation to your team. Refunds, billing and account requests always go to a person regardless of confidence.
           </p>
         </div>
 

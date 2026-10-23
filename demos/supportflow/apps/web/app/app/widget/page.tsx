@@ -124,7 +124,7 @@ export default function WidgetPage() {
         <div className="min-w-0 space-y-6">
           <Panel title="Install" description="Paste this before the closing </body> tag on every page that should show the chat.">
             <div className="flex items-start gap-2">
-              <pre className="min-w-0 flex-1 overflow-x-auto rounded-md border border-border bg-surface-2 p-3.5 font-mono text-[12.5px] leading-relaxed text-text">
+              <pre tabIndex={0} aria-label="Install code" className="min-w-0 flex-1 overflow-x-auto rounded-md border border-border bg-surface-2 p-3.5 font-mono text-[12.5px] leading-relaxed text-text">
                 <code>{snippet}</code>
               </pre>
               <Button variant="secondary" onClick={() => void copy()} aria-label="Copy install code">
@@ -237,7 +237,7 @@ export default function WidgetPage() {
                         aria-label="Pick brand colour"
                         className="h-11 w-12 shrink-0 cursor-pointer rounded-md border border-border bg-surface p-1 sm:h-9"
                       />
-                      <Input value={form.brandColor} onChange={(e) => set("brandColor", e.target.value)} maxLength={7} className="font-mono" />
+                      <Input value={form.brandColor} onChange={(e) => set("brandColor", e.target.value)} maxLength={7} className="font-mono" aria-label="Brand colour hex code" />
                     </div>
                   </Field>
                   <Field label="Position">

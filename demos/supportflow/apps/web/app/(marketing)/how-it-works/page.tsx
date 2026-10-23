@@ -49,7 +49,7 @@ export default function HowItWorksPage() {
               <h2 className="text-lg font-semibold text-text">{step.title}</h2>
               <p className="mt-1.5 max-w-2xl text-[15px] leading-relaxed text-muted">{step.body}</p>
               {i === 3 && (
-                <pre className="mt-4 max-w-2xl overflow-x-auto rounded-lg border border-border bg-surface-2 p-4 font-mono text-[13px] leading-relaxed text-text">
+                <pre tabIndex={0} aria-label="Example install code" className="mt-4 max-w-2xl overflow-x-auto rounded-lg border border-border bg-surface-2 p-4 font-mono text-[13px] leading-relaxed text-text">
                   <code>{`<script
   src="https://api.your-supportflow-host/widget.js"
   data-key="pk_your_public_key"
