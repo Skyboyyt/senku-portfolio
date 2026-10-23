@@ -37,7 +37,7 @@ async function main() {
     return;
   }
 
-  const passwordHash = await hashPassword(password);
+  const passwordHash = await hashPassword(db, password);
   const [owner] = await db.insert(users).values({ email: ownerEmail, name: "Riley Owner (sample)", passwordHash }).returning();
   const [agent] = await db
     .insert(users)

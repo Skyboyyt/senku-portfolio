@@ -8,6 +8,7 @@ import {
 } from "@supportflow/shared";
 import { asksForHuman } from "../ai/guards";
 import type { AppContext } from "../context";
+import type { RealtimeBus } from "../realtime/bus";
 import { conversations, customers, messages, organizations, users, widgetConfigs } from "../db/schema";
 import { randomToken, sha256 } from "../lib/crypto";
 import { AppError, badRequest, forbidden, notFound } from "../lib/errors";
@@ -106,7 +107,44 @@ async function visibleMessages(ctx: AppContext, orgId: string, conversationId: s
   return rows.map(({ m, authorName }) => toWidgetMessage(m, authorName));
 }
 
-export function widgetPublicRoutes(ctx: AppContext): FastifyPluginAsync {
+export type VisitorSocketAuth = { ok: true; conversationId: string } | { ok: false; code: number; reason: string };
+
+/** Checks that a visitor token owns the conversation a widget socket asks to follow. */
+export async function authorizeVisitorSocket(
+  ctx: AppContext,
+  widget: { orgId: string },
+  token: unknown,
+  conversationId: unknown,
+): Promise<VisitorSocketAuth> {
+  const customer = await findCustomer(ctx, widget.orgId, typeof token === "string" ? token : null);
+  if (!customer || typeof conversationId !== "string" || !/^[0-9a-f-]{36}$/i.test(conversationId)) {
+    return { ok: false, code: 4401, reason: "unauthorized" };
+  }
+  const [conversation] = await ctx.db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(
+      and(
+        eq(conversations.id, conversationId),
+        eq(conversations.orgId, widget.orgId),
+        eq(conversations.customerId, customer.id),
+      ),
+    );
+  if (!conversation) return { ok: false, code: 4404, reason: "not found" };
+  return { ok: true, conversationId: conversation.id };
+}
+
+/**
+ * Loads a widget for a WebSocket upgrade outside Fastify (the Cloudflare Worker entry),
+ * applying the same key, origin and enabled checks as the HTTP routes.
+ */
+export async function widgetForSocket(ctx: AppContext, key: string, origin: string | undefined) {
+  const widget = await loadWidget(ctx, key);
+  if (!widget || !widget.enabled || !isOriginAllowed(origin, widget, ctx.config.WEB_ORIGIN)) return null;
+  return widget;
+}
+
+export function widgetPublicRoutes(ctx: AppContext, localBus: RealtimeBus | null): FastifyPluginAsync {
   return async (app) => {
     // Every route below is scoped to one widget key and one allowed origin.
     app.addHook("onRequest", async (request, reply) => {
@@ -305,30 +343,17 @@ export function widgetPublicRoutes(ctx: AppContext): FastifyPluginAsync {
       },
     );
 
+    if (!localBus) return;
+
     // Realtime updates for one visitor's conversation.
     app.get("/public/widget/:key/ws", { websocket: true }, async (socket, request) => {
-      const widget = request.widget!;
-      const { token, conversationId } = (request.query ?? {}) as { token?: string; conversationId?: string };
-      const customer = await findCustomer(ctx, widget.orgId, typeof token === "string" ? token : null);
-      if (!customer || typeof conversationId !== "string" || !/^[0-9a-f-]{36}$/i.test(conversationId)) {
-        socket.close(4401, "unauthorized");
+      const { token, conversationId } = (request.query ?? {}) as { token?: unknown; conversationId?: unknown };
+      const result = await authorizeVisitorSocket(ctx, request.widget!, token, conversationId);
+      if (!result.ok) {
+        socket.close(result.code, result.reason);
         return;
       }
-      const [conversation] = await ctx.db
-        .select({ id: conversations.id })
-        .from(conversations)
-        .where(
-          and(
-            eq(conversations.id, conversationId),
-            eq(conversations.orgId, widget.orgId),
-            eq(conversations.customerId, customer.id),
-          ),
-        );
-      if (!conversation) {
-        socket.close(4404, "not found");
-        return;
-      }
-      const unsubscribe = ctx.bus.subscribeVisitor(conversation.id, (event) => {
+      const unsubscribe = localBus.subscribeVisitor(result.conversationId, (event) => {
         if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(event));
       });
       const ping = setInterval(() => socket.readyState === socket.OPEN && socket.ping(), 25_000);

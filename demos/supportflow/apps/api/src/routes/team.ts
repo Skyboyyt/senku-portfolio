@@ -311,7 +311,7 @@ export function teamRoutes(ctx: AppContext): FastifyPluginAsync {
       { config: { rateLimit: { max: 10, timeWindow: "1 hour" } } },
       async (request, reply) => {
         const input = parse(registerWithInviteSchema, request.body);
-        const passwordHash = await hashPassword(input.password);
+        const passwordHash = await hashPassword(ctx.db, input.password);
         const result = await ctx.db.transaction(async (tx) => {
           const { invitation } = await findInvitation(tx, input.token);
           const [taken] = await tx

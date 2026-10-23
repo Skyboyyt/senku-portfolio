@@ -3,6 +3,7 @@ import { extractiveReply } from "../src/ai/assistant";
 import { chunkArticle, splitImport } from "../src/ai/chunk";
 import { asksForHuman, detectSensitiveIntent, escapeForPrompt, findUnsupportedLinks, makesUnauthorizedCommitment } from "../src/ai/guards";
 import { queryTerms } from "../src/ai/retrieval";
+import { signTicket, verifyTicket } from "../src/realtime/tickets";
 import { isOriginAllowed } from "../src/routes/widget-public";
 
 describe("chunking", () => {
@@ -70,5 +71,24 @@ describe("origin checks", () => {
     expect(isOriginAllowed(undefined, widget, [])).toBe(false);
     expect(isOriginAllowed("null", widget, [])).toBe(false);
     expect(isOriginAllowed("https://app.example", widget, ["https://app.example"])).toBe(true);
+  });
+});
+
+describe("realtime tickets", () => {
+  const secret = "x".repeat(40);
+
+  it("round-trips a signed ticket", () => {
+    const ticket = signTicket(secret, "user-1", "org-1");
+    expect(verifyTicket(secret, ticket)).toMatchObject({ u: "user-1", o: "org-1" });
+  });
+
+  it("rejects tampered, foreign and expired tickets", () => {
+    const ticket = signTicket(secret, "user-1", "org-1");
+    const [body, sig] = ticket.split(".");
+    const forged = Buffer.from(JSON.stringify({ ...JSON.parse(Buffer.from(body!, "base64url").toString()), o: "org-2" })).toString("base64url");
+    expect(verifyTicket(secret, `${forged}.${sig}`)).toBeNull();
+    expect(verifyTicket("y".repeat(40), ticket)).toBeNull();
+    expect(verifyTicket(secret, ticket, Date.now() + 61_000)).toBeNull();
+    expect(verifyTicket(secret, "garbage")).toBeNull();
   });
 });

@@ -60,10 +60,15 @@ export async function monthlyAiUsage(db: Database, orgId: string): Promise<numbe
 
 export class AiAssistant {
   constructor(
-    private readonly db: Database,
+    /** Read on every use: on Cloudflare Workers the connection is per request. */
+    private readonly source: { readonly db: Database },
     readonly provider: LlmProvider,
     private readonly timeoutMs: number,
   ) {}
+
+  private get db(): Database {
+    return this.source.db;
+  }
 
   get available(): boolean {
     return this.provider.name !== "none";

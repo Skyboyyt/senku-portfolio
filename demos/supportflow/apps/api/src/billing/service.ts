@@ -36,10 +36,15 @@ interface StripeEvent {
  */
 export class BillingService {
   constructor(
-    private readonly db: Database,
+    /** Read on every use: on Cloudflare Workers the connection is per request. */
+    private readonly source: { readonly db: Database },
     private readonly config: Config,
     private readonly fetchImpl: typeof fetch = fetch,
   ) {}
+
+  private get db(): Database {
+    return this.source.db;
+  }
 
   get mode(): Config["BILLING_MODE"] {
     return this.config.BILLING_MODE;

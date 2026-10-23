@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { z } from "zod";
 
 const bool = z
@@ -97,6 +98,8 @@ export interface Config extends Env {
   isProduction: boolean;
   cookieSecure: boolean;
   aiProvider: "anthropic" | "openai" | "extractive" | "none";
+  /** Signs dashboard WebSocket tickets. Shared across instances when PROXY_SHARED_SECRET is set. */
+  realtimeSecret: string;
 }
 
 export function loadConfig(source: Record<string, string | undefined> = process.env): Config {
@@ -116,5 +119,6 @@ export function loadConfig(source: Record<string, string | undefined> = process.
     isProduction: env.NODE_ENV === "production",
     cookieSecure: env.COOKIE_SECURE ?? env.NODE_ENV === "production",
     aiProvider,
+    realtimeSecret: env.PROXY_SHARED_SECRET ?? randomBytes(32).toString("base64url"),
   };
 }

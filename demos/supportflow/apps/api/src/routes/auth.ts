@@ -23,7 +23,7 @@ export function authRoutes(ctx: AppContext): FastifyPluginAsync {
       { config: { rateLimit: { max: 10, timeWindow: "1 hour" } } },
       async (request, reply) => {
         const input = parse(registerSchema, request.body);
-        const passwordHash = await hashPassword(input.password);
+        const passwordHash = await hashPassword(ctx.db, input.password);
         let created: { userId: string; orgId: string };
         try {
           created = await ctx.db.transaction(async (tx) => {
@@ -78,7 +78,7 @@ export function authRoutes(ctx: AppContext): FastifyPluginAsync {
           .from(users)
           .where(sql`lower(${users.email}) = ${input.email}`);
         // Verify against a dummy hash when the user doesn't exist, so timing doesn't reveal accounts.
-        const valid = await verifyPassword(user?.passwordHash ?? (await getDummyHash()), input.password);
+        const valid = await verifyPassword(ctx.db, user?.passwordHash ?? getDummyHash(), input.password);
         if (!user || !valid) {
           throw new AppError(401, "invalid_credentials", "Email or password is incorrect");
         }
@@ -131,14 +131,14 @@ export function authRoutes(ctx: AppContext): FastifyPluginAsync {
         const session = requireUser(request);
         const input = parse(changePasswordSchema, request.body);
         const [user] = await ctx.db.select().from(users).where(eq(users.id, session.user.id));
-        if (!user || !(await verifyPassword(user.passwordHash, input.currentPassword))) {
+        if (!user || !(await verifyPassword(ctx.db, user.passwordHash, input.currentPassword))) {
           throw new AppError(400, "invalid_password", "Current password is incorrect", {
             currentPassword: "Current password is incorrect",
           });
         }
         await ctx.db
           .update(users)
-          .set({ passwordHash: await hashPassword(input.newPassword), updatedAt: new Date() })
+          .set({ passwordHash: await hashPassword(ctx.db, input.newPassword), updatedAt: new Date() })
           .where(eq(users.id, user.id));
         // Sign out every other device.
         await ctx.db.delete(sessions).where(and(eq(sessions.userId, user.id), ne(sessions.id, session.id)));

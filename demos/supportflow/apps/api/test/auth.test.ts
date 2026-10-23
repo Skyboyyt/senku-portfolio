@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { as, createTestApp, login, register, resetDatabase, uniqueEmail, WEB_ORIGIN } from "./helpers";
+import { as, createTestApp, login, nextIp, register, resetDatabase, uniqueEmail, WEB_ORIGIN } from "./helpers";
 
 let app: FastifyInstance;
 
@@ -65,6 +65,26 @@ describe("registration and sessions", () => {
     expect(wrong.statusCode).toBe(401);
     expect(unknown.statusCode).toBe(401);
     expect(wrong.json().error.message).toBe(unknown.json().error.message);
+  });
+
+  it("uses every character of a long password, beyond bcrypt's 72-byte limit", async () => {
+    const base = "a".repeat(80);
+    const email = uniqueEmail();
+    const res = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      remoteAddress: nextIp(),
+      payload: { name: "Long", email, password: `${base}-one`, organizationName: "Long Co" },
+    });
+    expect(res.statusCode).toBe(201);
+    expect(await login(app, email, `${base}-one`)).toMatch(/^sf_session=/);
+    const other = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      remoteAddress: nextIp(),
+      payload: { email, password: `${base}-two` },
+    });
+    expect(other.statusCode).toBe(401);
   });
 
   it("stores only a hash of the session token", async () => {

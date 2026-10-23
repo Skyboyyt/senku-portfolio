@@ -2,40 +2,40 @@ import { and, eq } from "drizzle-orm";
 import type { FastifyPluginAsync } from "fastify";
 import type { AppContext } from "../context";
 import { memberships } from "../db/schema";
-import { randomToken } from "../lib/crypto";
 import { requireMember } from "../plugins/auth";
+import type { RealtimeBus } from "./bus";
+import { TICKET_TTL_MS, signTicket, verifyTicket } from "./tickets";
 
-const TICKET_TTL_MS = 60_000;
 const MEMBERSHIP_RECHECK_MS = 60_000;
-
-interface Ticket {
-  userId: string;
-  orgId: string;
-  expiresAt: number;
-}
 
 /**
  * Dashboard WebSocket. The browser connects to the API host directly (the web proxy can't
- * carry WebSockets), so it first exchanges its session cookie, via the proxy, for a
+ * carry WebSockets), so it first exchanges its session cookie, via the proxy, for a signed,
  * single-use ticket that is valid for one minute.
+ *
+ * `localBus` is the in-process bus of the Node server. On Cloudflare Workers sockets are
+ * accepted by a Durable Object instead (see `worker.ts`), so only the ticket route is used.
  */
-export function realtimeRoutes(ctx: AppContext): FastifyPluginAsync {
-  const tickets = new Map<string, Ticket>();
+export function realtimeRoutes(ctx: AppContext, localBus: RealtimeBus | null): FastifyPluginAsync {
+  const usedNonces = new Map<string, number>();
   const sweep = setInterval(() => {
     const now = Date.now();
-    for (const [key, ticket] of tickets) if (ticket.expiresAt < now) tickets.delete(key);
+    for (const [nonce, expires] of usedNonces) if (expires < now) usedNonces.delete(nonce);
   }, 30_000);
-  sweep.unref();
+  sweep.unref?.();
 
   return async (app) => {
     app.addHook("onClose", async () => clearInterval(sweep));
 
     app.post("/realtime/ticket", async (request) => {
       const member = await requireMember(ctx, request);
-      const ticket = randomToken(24);
-      tickets.set(ticket, { userId: member.user.id, orgId: member.orgId, expiresAt: Date.now() + TICKET_TTL_MS });
-      return { ticket, expiresInSeconds: TICKET_TTL_MS / 1000 };
+      return {
+        ticket: signTicket(ctx.config.realtimeSecret, member.user.id, member.orgId),
+        expiresInSeconds: TICKET_TTL_MS / 1000,
+      };
     });
+
+    if (!localBus) return;
 
     app.get("/realtime", { websocket: true }, (socket, request) => {
       const origin = request.headers.origin;
@@ -43,15 +43,14 @@ export function realtimeRoutes(ctx: AppContext): FastifyPluginAsync {
         socket.close(4403, "origin not allowed");
         return;
       }
-      const key = String((request.query as { ticket?: string } | undefined)?.ticket ?? "");
-      const ticket = tickets.get(key);
-      tickets.delete(key);
-      if (!ticket || ticket.expiresAt < Date.now()) {
+      const ticket = verifyTicket(ctx.config.realtimeSecret, String((request.query as { ticket?: string } | undefined)?.ticket ?? ""));
+      if (!ticket || usedNonces.has(ticket.n)) {
         socket.close(4401, "invalid ticket");
         return;
       }
+      usedNonces.set(ticket.n, ticket.e);
 
-      const unsubscribe = ctx.bus.subscribeOrg(ticket.orgId, (event) => {
+      const unsubscribe = localBus.subscribeOrg(ticket.o, (event) => {
         if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(event));
       });
       // Close the socket if the user is removed from the workspace.
@@ -60,7 +59,7 @@ export function realtimeRoutes(ctx: AppContext): FastifyPluginAsync {
           const [row] = await ctx.db
             .select({ id: memberships.id })
             .from(memberships)
-            .where(and(eq(memberships.orgId, ticket.orgId), eq(memberships.userId, ticket.userId)));
+            .where(and(eq(memberships.orgId, ticket.o), eq(memberships.userId, ticket.u)));
           if (!row) socket.close(4403, "membership revoked");
           else if (socket.readyState === socket.OPEN) socket.ping();
         } catch (error) {

@@ -9,10 +9,10 @@ import type { LlmProvider } from "./ai/types";
 import { BillingService } from "./billing/service";
 import type { Config } from "./config";
 import { TaskTracker, type AppContext } from "./context";
-import { createDb, type DbHandle } from "./db/client";
+import { createDb, type Database, type DbHandle } from "./db/client";
 import { AppError } from "./lib/errors";
 import { loadSession, resolveClientIp, SESSION_COOKIE } from "./plugins/auth";
-import { RealtimeBus } from "./realtime/bus";
+import { RealtimeBus, type RealtimePublisher } from "./realtime/bus";
 import { realtimeRoutes } from "./realtime/routes";
 import { analyticsRoutes } from "./routes/analytics";
 import { authRoutes } from "./routes/auth";
@@ -37,6 +37,12 @@ export interface BuildOptions {
   db?: DbHandle;
   provider?: LlmProvider;
   fetchImpl?: typeof fetch;
+  /**
+   * Cloudflare Workers: returns the current request's connection instead of a shared pool,
+   * and publishes realtime events through a Durable Object. WebSockets are then accepted
+   * by the Worker entry rather than by Fastify.
+   */
+  runtime?: { resolveDb: () => Database; bus: RealtimePublisher };
 }
 
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
@@ -63,19 +69,29 @@ export async function buildApp(options: BuildOptions): Promise<FastifyInstance> 
     disableRequestLogging: config.NODE_ENV === "test",
   });
 
-  const dbHandle = options.db ?? createDb(config.DATABASE_URL, config.DATABASE_POOL_MAX);
   const provider = options.provider ?? createProvider(config);
+  const runtime = options.runtime;
+  const dbHandle = runtime ? null : (options.db ?? createDb(config.DATABASE_URL, config.DATABASE_POOL_MAX));
+  const resolveDb = runtime ? runtime.resolveDb : () => dbHandle!.db;
+  const localBus = runtime ? null : new RealtimeBus();
+  const source = {
+    get db() {
+      return resolveDb();
+    },
+  };
   const ctx: AppContext = {
     config,
-    db: dbHandle.db,
-    bus: new RealtimeBus(),
-    ai: new AiAssistant(dbHandle.db, provider, config.AI_TIMEOUT_MS),
-    billing: new BillingService(dbHandle.db, config, options.fetchImpl),
+    get db() {
+      return resolveDb();
+    },
+    bus: runtime ? runtime.bus : localBus!,
+    ai: new AiAssistant(source, provider, config.AI_TIMEOUT_MS),
+    billing: new BillingService(source, config, options.fetchImpl),
     tasks: new TaskTracker(app.log),
     log: app.log,
   };
   app.decorate("ctx", ctx);
-  if (!options.db) app.addHook("onClose", async () => dbHandle.close());
+  if (dbHandle && !options.db) app.addHook("onClose", async () => dbHandle.close());
   app.addHook("onClose", async () => ctx.tasks.idle());
 
   // Only JSON bodies are accepted. Dropping text/plain removes a CORS-"simple" content type
@@ -98,7 +114,7 @@ export async function buildApp(options: BuildOptions): Promise<FastifyInstance> 
     errorResponseBuilder: (_request, context) =>
       new AppError(429, "rate_limited", `Too many requests. Try again in ${context.after}.`),
   });
-  await app.register(websocket, { options: { maxPayload: 16 * 1024 } });
+  if (localBus) await app.register(websocket, { options: { maxPayload: 16 * 1024 } });
 
   app.decorateRequest("session", null);
   app.decorateRequest("clientIp", "");
@@ -146,9 +162,9 @@ export async function buildApp(options: BuildOptions): Promise<FastifyInstance> 
   await app.register(kbRoutes(ctx));
   await app.register(analyticsRoutes(ctx));
   await app.register(widgetAdminRoutes(ctx));
-  await app.register(widgetPublicRoutes(ctx));
+  await app.register(widgetPublicRoutes(ctx, localBus));
   await app.register(billingRoutes(ctx));
-  await app.register(realtimeRoutes(ctx));
+  await app.register(realtimeRoutes(ctx, localBus));
 
   return app;
 }
