@@ -1,0 +1,29 @@
+{
+  "framework": null,
+  "buildCommand": null,
+  "installCommand": null,
+  "outputDirectory": "public",
+  "redirects": [
+    {
+      "source": "/signin-with-chatgpt",
+      "destination": "https://learnspace-skyboy.calm-crumb-7736.chatgpt.site/signin-with-chatgpt",
+      "permanent": false
+    },
+    {
+      "source": "/signout-with-chatgpt",
+      "destination": "https://learnspace-skyboy.calm-crumb-7736.chatgpt.site/signout-with-chatgpt",
+      "permanent": false
+    },
+    {
+      "source": "/callback",
+      "destination": "https://learnspace-skyboy.calm-crumb-7736.chatgpt.site/callback",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "destination": "https://learnspace-skyboy.calm-crumb-7736.chatgpt.site/:path*"
+    }
+  ]
+}
