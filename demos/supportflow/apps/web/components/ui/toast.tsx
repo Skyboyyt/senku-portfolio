@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -52,6 +52,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             >
               {t.tone === "error" ? (
                 <AlertTriangle className="mt-0.5 size-4 shrink-0 text-danger" aria-hidden />
+              ) : t.tone === "info" ? (
+                <Info className="mt-0.5 size-4 shrink-0 text-info" aria-hidden />
               ) : (
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-success" aria-hidden />
               )}

@@ -34,11 +34,13 @@ function useWidth() {
 }
 
 /** Clean axis ticks: 0 and up to 4 round steps covering the max. */
-function niceTicks(max: number): number[] {
+function niceTicks(max: number, integer = false): number[] {
   if (max <= 0) return [0, 1];
   const raw = max / 4;
   const mag = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? raw;
+  let step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? raw;
+  // Counts never get fractional ticks.
+  if (integer) step = Math.max(1, Math.ceil(step));
   const ticks: number[] = [];
   for (let v = 0; v <= max + step * 0.001; v += step) ticks.push(Number(v.toFixed(6)));
   if (ticks.at(-1)! < max) ticks.push(ticks.at(-1)! + step);
@@ -83,8 +85,8 @@ function ChartFrame({
   const fmt = format ?? ((v: number) => v.toLocaleString("en-US"));
   return (
     <figure className={cn("rounded-lg border border-border bg-surface", className)}>
-      <figcaption className="flex flex-wrap items-start justify-between gap-2 border-b border-border px-4 py-3 sm:px-5">
-        <div>
+      <figcaption className="flex items-start justify-between gap-3 border-b border-border px-4 py-3 sm:px-5">
+        <div className="min-w-0 flex-1">
           <h3 className="text-[15px] font-semibold text-text">{title}</h3>
           {description && <p className="mt-0.5 text-[13px] text-muted">{description}</p>}
         </div>
@@ -93,7 +95,7 @@ function ChartFrame({
             type="button"
             onClick={() => setShowTable((v) => !v)}
             aria-pressed={showTable}
-            className="min-h-9 rounded-md px-2 text-[13px] text-muted underline-offset-4 hover:text-text hover:underline"
+            className="min-h-9 shrink-0 rounded-md px-2 text-[13px] text-muted underline-offset-4 hover:text-text hover:underline"
           >
             {showTable ? "Show chart" : "Show table"}
           </button>
@@ -201,7 +203,8 @@ export function ColumnChart(props: ChartProps) {
   const titleId = useId();
   const max = Math.max(0, ...data.flatMap((d) => series.map((s) => d.values[s.key] ?? 0)));
   const isEmpty = max === 0;
-  const ticks = niceTicks(max);
+  const integer = data.every((d) => series.every((s) => Number.isInteger(d.values[s.key] ?? 0)));
+  const ticks = niceTicks(max, integer);
   const top = ticks.at(-1)!;
   const plotH = HEIGHT - PAD.top - PAD.bottom;
   const y = (v: number) => PAD.top + plotH - (v / top) * plotH;
