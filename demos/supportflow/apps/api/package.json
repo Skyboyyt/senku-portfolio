@@ -1,0 +1,44 @@
+{
+  "name": "@supportflow/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/server.ts",
+    "build": "tsup",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=../../.env src/db/migrate.ts",
+    "db:migrate:prod": "node dist/migrate.js",
+    "db:seed": "tsx --env-file-if-exists=../../.env src/db/seed.ts",
+    "demo:setup": "tsx --env-file-if-exists=../../.env src/db/demo.ts",
+    "demo:setup:prod": "node dist/demo.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.1.0",
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.1.0",
+    "@fastify/helmet": "^13.0.2",
+    "@fastify/rate-limit": "^11.2.1",
+    "@fastify/websocket": "^11.2.0",
+    "@node-rs/argon2": "^2.0.2",
+    "@supportflow/shared": "workspace:*",
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.7",
+    "fastify-plugin": "^5.1.0",
+    "openai": "^7.43.0",
+    "postgres": "^3.4.7",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/ws": "^8.18.1",
+    "drizzle-kit": "^0.31.5",
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.6",
+    "vitest": "^4.1.12",
+    "ws": "^8.18.3"
+  }
+}

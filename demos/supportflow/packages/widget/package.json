@@ -1,0 +1,17 @@
+{
+  "name": "@supportflow/widget",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@supportflow/shared": "workspace:*",
+    "esbuild": "^0.28.2",
+    "happy-dom": "^20.0.0",
+    "vitest": "^4.1.12"
+  }
+}

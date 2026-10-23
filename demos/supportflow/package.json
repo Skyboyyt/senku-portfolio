@@ -1,0 +1,32 @@
+{
+  "name": "supportflow",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.28.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "pnpm --filter @supportflow/widget build && pnpm --parallel --filter @supportflow/api --filter @supportflow/web dev",
+    "build": "pnpm --filter @supportflow/shared build && pnpm --filter @supportflow/widget build && pnpm --filter @supportflow/api build && pnpm --filter @supportflow/web build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r test",
+    "e2e": "playwright test",
+    "db:generate": "pnpm --filter @supportflow/api db:generate",
+    "db:migrate": "pnpm --filter @supportflow/api db:migrate",
+    "db:seed": "pnpm --filter @supportflow/api db:seed",
+    "demo:setup": "pnpm --filter @supportflow/api demo:setup"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@eslint/js": "^9.39.0",
+    "@playwright/test": "1.56.1",
+    "eslint": "^9.39.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.0"
+  }
+}
