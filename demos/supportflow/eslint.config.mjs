@@ -26,7 +26,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["apps/api/src/db/{seed,demo,migrate}.ts", "**/build.mjs", "e2e/**"],
+    files: ["apps/api/src/db/{seed,demo,migrate}.ts", "**/build.mjs", "e2e/**", "scripts/**"],
     rules: { "no-console": "off" },
   },
 );

@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNotNull, lt, sql } from "drizzle-orm";
 import type { Database } from "../db/client";
-import { auditLogs, conversations, customers, organizations, sessions } from "../db/schema";
+import { auditLogs, contactRequests, conversations, customers, organizations, sessions } from "../db/schema";
 import { audit } from "../lib/audit";
 
 /**
@@ -66,7 +66,9 @@ export async function runMaintenance(db: Database, demoRetentionHours: number) {
   }
   const demoDeleted = await purgeDemo(db, demoRetentionHours);
   await db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
-  // Audit entries are kept for a year.
-  await db.delete(auditLogs).where(lt(auditLogs.createdAt, new Date(Date.now() - 365 * 86400_000)));
+  // Audit entries and contact-form messages are kept for a year.
+  const yearAgo = new Date(Date.now() - 365 * 86400_000);
+  await db.delete(auditLogs).where(lt(auditLogs.createdAt, yearAgo));
+  await db.delete(contactRequests).where(lt(contactRequests.createdAt, yearAgo));
   return { conversationsDeleted, demoDeleted };
 }

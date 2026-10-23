@@ -1,0 +1,243 @@
+@import "tailwindcss";
+
+/* Dark mode follows data-theme, which the pre-paint script sets from the saved choice or the system. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ------------------------------------------------------------------
+   Design tokens. Every colour in the app comes from these variables.
+   ------------------------------------------------------------------ */
+:root {
+  color-scheme: light;
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --surface-2: #f1efe9;
+  --surface-3: #e9e6de;
+  --border: #e3e0d8;
+  --border-strong: #cdc8bd;
+  --text: #1b1a17;
+  --text-muted: #5c5850;
+  --text-subtle: #736e65;
+
+  --primary: #1d5c4e;
+  --primary-hover: #174b40;
+  --primary-fg: #ffffff;
+  --primary-soft: #e2eee9;
+  --primary-soft-fg: #164a3f;
+
+  /* Reserved for AI-generated content and AI status. */
+  --ai: #855600;
+  --ai-soft: #fbf0d8;
+  --ai-border: #ecd39d;
+
+  --success: #1e7344;
+  --success-soft: #e3f3e9;
+  --warning: #8f5f00;
+  --warning-soft: #fff3d4;
+  --danger: #b42318;
+  --danger-hover: #971c13;
+  --danger-soft: #fdebe9;
+  --info: #24539f;
+  --info-soft: #e7eefa;
+
+  --ring: #1d5c4e;
+  /* Chart series, validated for CVD separation and contrast on --surface. */
+  --chart-1: #16896b;
+  --chart-2: #d07a2c;
+  --chart-grid: #ebe8e1;
+  --shadow-sm: 0 1px 2px rgb(27 26 23 / 0.05);
+  --shadow-md: 0 1px 2px rgb(27 26 23 / 0.04), 0 6px 16px -4px rgb(27 26 23 / 0.08);
+  --shadow-lg: 0 2px 4px rgb(27 26 23 / 0.04), 0 18px 40px -12px rgb(27 26 23 / 0.18);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111312;
+  --surface: #181b19;
+  --surface-2: #1f2320;
+  --surface-3: #272c28;
+  --border: #2b302c;
+  --border-strong: #3c423d;
+  --text: #ecede8;
+  --text-muted: #a8aca2;
+  --text-subtle: #8b9086;
+
+  --primary: #62c3a7;
+  --primary-hover: #7dcfb7;
+  --primary-fg: #0a1914;
+  --primary-soft: #1a362f;
+  --primary-soft-fg: #9bdcc9;
+
+  --ai: #e8b85c;
+  --ai-soft: #352a12;
+  --ai-border: #5a4618;
+
+  --success: #6dcb92;
+  --success-soft: #16301f;
+  --warning: #e9b54d;
+  --warning-soft: #352a11;
+  --danger: #f28a7f;
+  --danger-hover: #f6a69d;
+  --danger-soft: #3b1d1a;
+  --info: #91b5f3;
+  --info-soft: #1a2842;
+
+  --ring: #62c3a7;
+  --chart-1: #2fa585;
+  --chart-2: #c97833;
+  --chart-grid: #262a27;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 20px -6px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 2px 4px rgb(0 0 0 / 0.3), 0 20px 44px -12px rgb(0 0 0 / 0.6);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-fg: var(--primary-fg);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-soft-fg: var(--primary-soft-fg);
+  --color-ai: var(--ai);
+  --color-ai-soft: var(--ai-soft);
+  --color-ai-border: var(--ai-border);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-display: var(--font-instrument), Georgia, serif;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Type scale (rem / line-height) */
+  --text-display: 3.5rem;
+  --text-display--line-height: 1.05;
+  --text-display-sm: 2.5rem;
+  --text-display-sm--line-height: 1.1;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--primary-soft);
+    color: var(--text);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  /* Inputs draw their own focus ring. */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skeleton shimmer, disabled with reduced motion above. */
+@keyframes sf-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+.sf-skeleton {
+  animation: sf-pulse 1.6s ease-in-out infinite;
+  background: var(--surface-3);
+}
+
+/* Readable long-form text for legal pages and articles. */
+.prose-sf {
+  max-width: 68ch;
+  color: var(--text);
+  line-height: 1.7;
+}
+.prose-sf h2 {
+  margin-top: 2.25rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.prose-sf h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+.prose-sf p,
+.prose-sf ul,
+.prose-sf ol {
+  margin-bottom: 1rem;
+  color: var(--text-muted);
+}
+.prose-sf ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.prose-sf ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.prose-sf li {
+  margin-bottom: 0.35rem;
+}
+.prose-sf a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose-sf strong {
+  color: var(--text);
+  font-weight: 600;
+}
