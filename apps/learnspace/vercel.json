@@ -22,6 +22,10 @@
   ],
   "rewrites": [
     {
+      "source": "/",
+      "destination": "https://learnspace-skyboy.calm-crumb-7736.chatgpt.site/"
+    },
+    {
       "source": "/:path*",
       "destination": "https://learnspace-skyboy.calm-crumb-7736.chatgpt.site/:path*"
     }
