@@ -14,8 +14,8 @@
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      // Replace with the id printed by `wrangler hyperdrive create supportflow-db`.
-      "id": "00000000000000000000000000000000",
+      // Printed by `wrangler hyperdrive create supportflow-db`; replace it if you deploy to another account.
+      "id": "6523bb6c38bc4668bfd265795cb86899",
       "localConnectionString": "postgres://postgres:postgres@localhost:5432/supportflow"
     }
   ],

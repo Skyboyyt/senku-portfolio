@@ -13,7 +13,8 @@ Kept up to date at the end of every phase so work can resume from here. Last upd
 | 5 | Knowledge base and AI assistant | Done |
 | 6 | Embeddable widget and customisation | Done |
 | 7 | Analytics, team management, billing | Done |
-| 8 | Security review, testing, documentation, deployment readiness, portfolio | Done, except the deployment itself (see blockers) |
+| 8 | Security review, testing, documentation, deployment readiness, portfolio | Done |
+| 9 | Deployment (Cloudflare Workers + Neon) | Done: https://supportflow-web.sanifahad24.workers.dev |
 
 ## Verification (last run)
 
@@ -48,11 +49,12 @@ Kept up to date at the end of every phase so work can resume from here. Last upd
 
 **Cloudflare port.** The API also runs on Cloudflare Workers (`apps/api/src/worker.ts`): Hyperdrive to Neon with a per-request connection, a `RealtimeHub` Durable Object for WebSockets, HMAC-signed socket tickets, a Cron Trigger for maintenance and static `widget.js`. Password hashing moved to Postgres (`pgcrypto` bcrypt) to fit the Workers CPU limit. The web app builds for Workers with OpenNext. Verified locally in `workerd`: an end-to-end smoke test (auth, both socket types, cross-tenant refusal, realtime fan-out, cron) and the full Playwright suite (20/20) against both Workers. The Node path still passes everything (123 unit and API tests, 20 e2e).
 
+**Deployment (23 October 2026).** Setup A from `docs/DEPLOYMENT.md`: migrations and the demo workspace on Neon, a Hyperdrive config, then both Workers. `/health/ready` reports the database OK. Playwright against the live site: 19/20, the failure being the test-billing step that production refuses; the full workflow with that step replaced by a database plan change passes (AI reply, realtime inbox, handoff, ticket, rating, analytics). Test workspaces were deleted afterwards. Measured CPU time is above the free plan's nominal 10 ms (median about 24 ms) with no rejected requests; see the deployment guide.
+
 ## Blockers and outstanding work
 
 **Needs the owner (credentials or paid services):**
 
-- **Deployment** — the chosen setup is Cloudflare Workers + Neon (free plans). It needs a Cloudflare API token and account ID and a Neon connection string in the session environment, and network access to `api.cloudflare.com` and Neon. Those weren't available in the build session, so nothing has been deployed. Steps are in `docs/DEPLOYMENT.md` (setup A).
 - **AI provider key** — without `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` the app uses the extractive provider. LLM paths are covered by tests with a mock provider but haven't been run against a live model.
 - **Stripe** — test-mode keys, three prices and a webhook are needed for real checkout. The Stripe paths are tested against a mocked Stripe API.
 

@@ -5,7 +5,7 @@ Two supported setups:
 - **A. Cloudflare Workers + Neon** — both apps on Workers, Postgres on Neon, reached through Hyperdrive. Fits the free plans of both.
 - **B. Render + Vercel + Neon** — the API as a Node service, the web app on Vercel.
 
-Nothing here has been deployed yet. Setup A has been verified locally in `workerd` (the Workers runtime) with both Workers running against Postgres: the full Playwright suite (20 tests) passes against them. Setup B's production build, migrations and startup checks have been verified locally.
+Setup A is live at **https://supportflow-web.sanifahad24.workers.dev** (API: `https://supportflow-api.sanifahad24.workers.dev`), deployed on 23 October 2026 with the extractive AI provider and billing disabled. Against the live site, 19 of the 20 Playwright tests pass; the one failure is the billing step noted under [A4](#a4-verify), and the same workflow with that step replaced by a database plan change passes end to end. Setup B's production build, migrations and startup checks have been verified locally but it isn't deployed.
 
 ## A. Cloudflare Workers + Neon
 
@@ -21,6 +21,7 @@ You need a Cloudflare account (free plan), a Neon project (free plan) and, on th
    DATABASE_URL="postgres://…?sslmode=require" pnpm demo:setup   # prints NEXT_PUBLIC_DEMO_WIDGET_KEY=pk_…
    ```
    Migration `0001` enables `pgcrypto`, which Neon supports. Never run `pnpm db:seed` against production.
+   These scripts connect on port 5432. If your network only allows HTTPS, run the same migrations and `setupDemo` through Neon's WebSocket driver (`drizzle-orm/neon-serverless` with `@neondatabase/serverless`) instead; that's how the live deployment was set up.
 3. Create the Hyperdrive config and copy its id into `apps/api/wrangler.jsonc` (`hyperdrive[0].id`):
    ```bash
    cd apps/api
@@ -37,6 +38,7 @@ You need a Cloudflare account (free plan), a Neon project (free plan) and, on th
    npx wrangler secret put ANTHROPIC_API_KEY   # optional; without it the extractive fallback answers from articles
    ```
    With no AI key the API uses the extractive fallback automatically. Billing stays `disabled` unless you configure [Stripe](#stripe-optional) (the same variables, set as secrets).
+   The Worker checks its configuration at startup, so on the **first** deploy, before the Worker exists, pass the secret with the deploy instead: put `{"PROXY_SHARED_SECRET":"…"}` in a file outside the repository and add `--secrets-file <path>` to the deploy command below (and to the web Worker's deploy in A3, `pnpm exec opennextjs-cloudflare deploy -- --secrets-file <path>` after `pnpm cf:build`).
 3. Build the widget and deploy:
    ```bash
    cd demos/supportflow && pnpm --filter @supportflow/widget build
@@ -75,7 +77,7 @@ E2E_BASE_URL=http://localhost:8788 npx playwright test
 
 ### Free-plan limits to know
 
-- **Workers:** 100,000 requests a day across both Workers, and 10 ms of CPU per request. Password hashing runs in Postgres for this reason. CPU time per request hasn't been measured on Cloudflare yet (the local runtime doesn't enforce it); check the Worker's metrics after deploying, and move to the paid plan if requests exceed it.
+- **Workers:** 100,000 requests a day across both Workers, and 10 ms of CPU per request. Password hashing runs in Postgres for this reason. Measured on the live deployment during the test runs (about 1,400 requests across both Workers): median CPU time about 24 ms and p99 about 530 ms, with no request rejected for exceeding its limit. That's above the nominal 10 ms, so keep an eye on the Workers metrics for `exceededResources` errors (error 1102) and move to the paid plan (30 s of CPU per request) if they appear.
 - **Durable Objects:** one request per realtime event per channel, and WebSocket messages count toward the daily request allowance.
 - **Neon:** the database suspends when idle, so the first request after a quiet period takes longer.
 - **Rate limits** are kept per isolate, so they are looser than on a single Node server (see `docs/SECURITY.md`).
