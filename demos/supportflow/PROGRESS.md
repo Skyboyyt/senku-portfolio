@@ -1,51 +1,69 @@
 # SupportFlow AI — progress log
 
-Kept up to date at the end of every phase so work can resume from here.
+Kept up to date at the end of every phase so work can resume from here. Last updated 23 October 2026.
 
 ## Status
 
 | Phase | Scope | State |
 | --- | --- | --- |
-| 1 | Architecture, monorepo, shared package, database schema, migrations | Done |
-| 2 | Public website, navigation, authentication | API done; web in progress |
-| 3 | Workspaces, roles, dashboard | API done; web pending |
-| 4 | Inbox, realtime messaging, tickets | API done; web pending |
-| 5 | Knowledge base, AI assistant | API done; web pending |
-| 6 | Embeddable widget | API done; widget script pending |
-| 7 | Analytics, team, billing | API done; web pending |
-| 8 | Hardening, e2e tests, docs, deployment readiness | Pending |
+| 1 | Architecture, monorepo, design system, database schema, migrations | Done |
+| 2 | Public website, responsive navigation, themes, authentication | Done |
+| 3 | Workspaces, roles, dashboard shell, overview | Done |
+| 4 | Unified inbox, realtime messaging, tickets, customers | Done |
+| 5 | Knowledge base and AI assistant | Done |
+| 6 | Embeddable widget and customisation | Done |
+| 7 | Analytics, team management, billing | Done |
+| 8 | Security review, testing, documentation, deployment readiness, portfolio | Done, except the deployment itself (see blockers) |
 
-## Phase 1 — completed
+## Verification (last run)
 
-- pnpm monorepo in `demos/supportflow`: `apps/api` (Fastify 5), `apps/web` (Next.js 16), `packages/shared` (Zod schemas, plans, DTO types), `packages/widget`.
-- PostgreSQL schema (Drizzle) with 21 tables, org-scoped indexes, unique constraints, a weighted full-text index for retrieval, and the initial migration in `apps/api/drizzle/`.
-- Environment validation that refuses unsafe production settings (test billing, missing proxy secret).
-- Development seed (`pnpm db:seed`, refuses `NODE_ENV=production`) and the isolated demo workspace (`pnpm demo:setup`).
+| Check | Result |
+| --- | --- |
+| `pnpm -r typecheck` | Passes (strict mode, all packages) |
+| `pnpm lint` | Passes |
+| API tests (`apps/api`, real Postgres) | 102 passed |
+| Widget tests (`packages/widget`, happy-dom) | 9 passed |
+| Shared tests (`packages/shared`) | 9 passed |
+| Playwright e2e (`pnpm e2e`, production builds) | 20 passed |
+| `next build` (web) | Passes, 24 routes |
+| API production build | `tsup` build, `dist/migrate.js` on an empty database, `dist/server.js` with `NODE_ENV=production`, `/health/ready` OK; unsafe production config refused |
 
-## Backend for phases 2–7 — completed and tested
+## Phase notes
 
-- Auth: argon2id passwords, hashed server-side sessions with sliding expiry, httpOnly SameSite=Lax cookie, CSRF origin check, login rate limiting, password change signs out other devices.
-- Workspaces and roles (owner/admin/agent), invitations with seat limits, member removal, audit log.
-- Inbox: filters, search, unread state, internal notes, assignment, takeover, AI resume, realtime events.
-- Tickets with per-workspace numbering, history, comments, filters.
-- Knowledge base: categories, drafts/publish/archive, Markdown import, reindexing, retrieval preview.
-- AI: Anthropic/OpenAI/extractive providers, grounded JSON replies, confidence threshold, deterministic guards (sensitive intents, unsupported links, unauthorized commitments), approval mode, summaries, monthly limits, usage/token tracking, fallback to a person on any failure.
-- Public widget API: per-key origin allow-list, CORS, rate limits, honeypot, link and duplicate filtering, visitor tokens, handoff, CSAT, realtime socket.
-- Billing: Stripe Checkout/Portal with signed, idempotent webhooks; dev-only test mode; disabled mode.
-- Analytics from SQL with nulls (not zeros) where there is no data.
-- Retention purge, demo purge, expired-session cleanup.
+**Phase 1.** pnpm monorepo in `demos/supportflow`; Drizzle schema with 21 org-scoped tables and a weighted full-text index; environment validation; development seed (refuses production) and an isolated demo workspace.
 
-Verification: `pnpm --filter @supportflow/api test` — 101 tests across auth, tenancy isolation, roles, AI failure handling, widget security, realtime, KB, tickets, billing, analytics. Typecheck, lint and `tsup` build pass. Built server boots and `/health/ready` reports the database.
+**Phase 2.** Marketing site (home with a live demo on the fictional Larkspur workspace, features, how it works, pricing, contact, privacy, terms), accessible mobile menu, light/dark/system theme without flash, registration, sign-in, invitations. Server-side sessions, CSRF origin checks, rate limits.
 
-## Next
+**Phase 3.** Dashboard shell with workspace switcher, realtime status, mobile navigation; overview metrics, setup checklist from real state, plan usage, team workload; creating additional workspaces.
 
-- Web app: design system, marketing pages, auth pages, dashboard shell and every dashboard page.
-- Widget script and its tests.
-- Playwright end-to-end and accessibility tests.
-- Documentation set and deployment configuration.
+**Phase 4.** Inbox with views, search, unread, assignment, notes, takeover, AI drafts, summaries and realtime updates; tickets with numbering, history and comments; customers with data deletion.
 
-## Known blockers
+**Phase 5.** Knowledge base editor (Markdown preview, publish/archive, categories, import, re-index, retrieval test). AI providers (Anthropic, OpenAI, extractive), guards, confidence threshold, approval mode, limits, token tracking and failure escalation; AI settings page.
 
-- No AI provider key in this environment: LLM paths are tested with a mock provider; the running app uses the extractive provider.
-- No Stripe keys: Stripe paths are tested against a mocked Stripe API; the running app uses test billing.
-- No email provider: invitation links are shown once to the admin to share.
+**Phase 6.** Shadow DOM widget (≈20 KB) with launcher or inline mode, continuity, handoff, email capture, rating, realtime with re-sync and polling fallback; widget settings with allowed websites, install code, key rotation and live preview.
+
+**Phase 7.** Analytics charts (validated colours, tooltips, table views, empty states); team roles and invitations; billing for Stripe, test and disabled modes.
+
+**Phase 8.** Security review fixes (per-IP widget limit that can't be bypassed by minting tokens); Playwright suite; fixes for bugs it found (widget missing fast AI replies, inbox list not updating live, invite redirect, contrast and labelling issues); sitemap, robots, Open Graph image, error pages; README, architecture, API, security, deployment and case-study documents; Render blueprint and Vercel config; real screenshots; portfolio entry.
+
+## Blockers and outstanding work
+
+**Needs the owner (credentials or paid services):**
+
+- **Deployment** — needs a Neon database, a Render web service (paid tier recommended for WebSockets) and a Vercel project. Steps are in `docs/DEPLOYMENT.md`. Nothing has been deployed.
+- **AI provider key** — without `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` the app uses the extractive provider. LLM paths are covered by tests with a mock provider but haven't been run against a live model.
+- **Stripe** — test-mode keys, three prices and a webhook are needed for real checkout. The Stripe paths are tested against a mocked Stripe API.
+
+**Not implemented (documented as limitations):**
+
+- Email delivery (invitation emails, password reset, email verification).
+- Horizontal scaling: realtime bus and rate limits are in memory (single API instance).
+- Embedding-based retrieval (current retrieval is Postgres full-text search).
+- Chat attachments; multi-factor authentication; nonce-based CSP for the web app.
+- Error monitoring integration (recommended in the deployment guide).
+
+## Resuming work
+
+1. Start Postgres and create `supportflow`, `supportflow_test` and `supportflow_e2e` databases.
+2. `cp .env.example .env`, set `PROXY_SHARED_SECRET`, run `pnpm install`, `pnpm db:migrate`, `pnpm demo:setup`, `pnpm db:seed`.
+3. `pnpm dev`; tests with `pnpm test` and `pnpm e2e`.

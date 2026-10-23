@@ -565,6 +565,7 @@ function Composer({
                 type="button"
                 role="tab"
                 aria-selected={mode === m}
+                aria-label={m === "reply" ? "Reply to customer" : "Internal note"}
                 onClick={() => setMode(m)}
                 className={cn(
                   "min-h-10 rounded-md px-3 text-[13px] font-medium sm:min-h-8",
@@ -575,7 +576,17 @@ function Composer({
                     : "text-muted hover:text-text",
                 )}
               >
-                {m === "reply" ? "Reply to customer" : "Internal note"}
+                {m === "reply" ? (
+                  <>
+                    Reply<span className="hidden sm:inline"> to customer</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="hidden sm:inline">Internal </span>
+                    <span className="sm:hidden">Note</span>
+                    <span className="hidden sm:inline">note</span>
+                  </>
+                )}
               </button>
             ))}
           </div>
@@ -604,7 +615,7 @@ function Composer({
             onChange={(e) => setBody(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={mode === "note" ? "Only your team will see this note" : "Write a reply…"}
-            aria-label={mode === "note" ? "Internal note" : "Reply"}
+            aria-label={mode === "note" ? "Note for your team" : "Reply message"}
             maxLength={5000}
             className={cn(
               "min-h-20 resize-y",

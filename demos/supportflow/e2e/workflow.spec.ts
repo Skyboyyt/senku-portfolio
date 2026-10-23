@@ -52,13 +52,13 @@ test("support workflow: knowledge base, AI reply, realtime handoff, ticket", asy
   await expect(inbox.getByText("Waiting for a person. The AI has stopped replying.")).toBeVisible({ timeout: 15_000 });
 
   // An agent replies; the visitor sees it live.
-  await inbox.getByLabel("Reply").fill("Hi! We're open 9 to 1 on Saturdays. See you then.");
+  await inbox.getByLabel("Reply message").fill("Hi! We're open 9 to 1 on Saturdays. See you then.");
   await inbox.getByRole("button", { name: "Send reply" }).click();
   await expect(chat.getByText("Hi! We're open 9 to 1 on Saturdays. See you then.")).toBeVisible({ timeout: 15_000 });
 
   // Internal notes never reach the visitor.
   await inbox.getByRole("tab", { name: "Internal note" }).click();
-  await inbox.getByLabel("Internal note").fill("Regular customer, likes the Ethiopia roast");
+  await inbox.getByLabel("Note for your team").fill("Regular customer, likes the Ethiopia roast");
   await inbox.getByRole("button", { name: "Add note" }).click();
   await expect(inbox.getByText("Regular customer, likes the Ethiopia roast")).toBeVisible();
   await page.waitForTimeout(1000);

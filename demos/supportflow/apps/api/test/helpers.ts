@@ -150,6 +150,13 @@ export async function widgetKey(app: FastifyInstance, actor: Actor): Promise<str
   return res.json().config.publicKey as string;
 }
 
+const visitorIps = new Map<string, string>();
+/** Each simulated visitor keeps one address across their messages. */
+function ipForToken(token: string): string {
+  if (!visitorIps.has(token)) visitorIps.set(token, nextIp());
+  return visitorIps.get(token)!;
+}
+
 /** Sends a message as a website visitor through the public widget API. */
 export async function visitorSays(
   app: FastifyInstance,
@@ -161,6 +168,7 @@ export async function visitorSays(
   const res = await app.inject({
     method: "POST",
     url: `/public/widget/${key}/messages`,
+    remoteAddress: ipForToken(token),
     headers: { origin, "x-visitor-token": token },
     payload: { body },
   });

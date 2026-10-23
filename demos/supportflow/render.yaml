@@ -1,0 +1,53 @@
+# Render Blueprint for the SupportFlow API.
+# In Render: New > Blueprint, pick this repository and set the blueprint path to
+# demos/supportflow/render.yaml. Values marked sync: false are entered in the dashboard.
+services:
+  - type: web
+    name: supportflow-api
+    runtime: node
+    plan: starter
+    region: frankfurt
+    rootDir: demos/supportflow
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @supportflow/widget build && pnpm --filter @supportflow/api build
+    # Applies pending migrations before each deploy goes live.
+    preDeployCommand: node apps/api/dist/migrate.js
+    startCommand: node apps/api/dist/server.js
+    healthCheckPath: /health/ready
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: TRUST_PROXY_HOPS
+        value: "1"
+      - key: DATABASE_URL
+        sync: false # Neon pooled connection string with ?sslmode=require
+      - key: WEB_ORIGIN
+        sync: false # e.g. https://supportflow.vercel.app
+      - key: API_PUBLIC_URL
+        sync: false # e.g. https://supportflow-api.onrender.com
+      - key: PROXY_SHARED_SECRET
+        generateValue: true # copy the same value into the Vercel project
+      - key: AI_PROVIDER
+        sync: false # anthropic | openai | extractive
+      - key: AI_MODEL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: BILLING_MODE
+        value: disabled # set to stripe once the Stripe values below are configured
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_STARTER
+        sync: false
+      - key: STRIPE_PRICE_PRO
+        sync: false
+      - key: STRIPE_PRICE_BUSINESS
+        sync: false
+      - key: CONTACT_WEBHOOK_URL
+        sync: false

@@ -219,3 +219,26 @@ describe("realtime", () => {
     first.close();
   });
 });
+
+describe("spam resistance", () => {
+  it("rotating visitor tokens doesn't bypass the per-IP message limit", async () => {
+    const app2 = await createTestApp();
+    const shop = await register(app2, "Spam Target");
+    const shopKey = await widgetKey(app2, shop);
+    const ip = nextIp();
+    const statuses: number[] = [];
+    for (let i = 0; i < 14; i++) {
+      const res = await app2.inject({
+        method: "POST",
+        url: `/public/widget/${shopKey}/messages`,
+        remoteAddress: ip,
+        headers: { origin: WEB_ORIGIN, "x-visitor-token": `rotating-token-${i}-0123456789abcdef` },
+        payload: { body: `Spam ${i}` },
+      });
+      statuses.push(res.statusCode);
+    }
+    expect(statuses.filter((s) => s === 201)).toHaveLength(12);
+    expect(statuses.at(-1)).toBe(429);
+    await app2.close();
+  });
+});

@@ -22,6 +22,8 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
 page.on("console", (m) => m.type() === "error" && errors.push(`console: ${m.text()}`));
 await page.goto(url, { waitUntil: "networkidle" });
+// Hide the Next.js development indicator if the app runs in dev mode.
+await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
 await page.waitForTimeout(800);
 await page.screenshot({ path: out, fullPage: fullPage === "true" });
 if (errors.length) console.log(errors.join("\n"));

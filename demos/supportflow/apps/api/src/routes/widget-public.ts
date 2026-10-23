@@ -175,11 +175,8 @@ export function widgetPublicRoutes(ctx: AppContext): FastifyPluginAsync {
       "/public/widget/:key/messages",
       {
         config: {
-          rateLimit: {
-            max: 12,
-            timeWindow: "1 minute",
-            keyGenerator: (req) => `widget-msg:${req.clientIp}:${String(req.headers["x-visitor-token"] ?? "")}`,
-          },
+          // Keyed on the client IP only: visitor tokens are free to mint, so they can't be the limit's key.
+          rateLimit: { max: 12, timeWindow: "1 minute", keyGenerator: (req) => `widget-msg:${req.clientIp}` },
         },
       },
       async (request, reply) => {
