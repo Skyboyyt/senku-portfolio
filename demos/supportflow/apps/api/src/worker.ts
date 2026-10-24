@@ -17,6 +17,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { handleAsNodeRequest } from "cloudflare:node";
 import type { FastifyInstance } from "fastify";
 import postgres from "postgres";
+import { WorkersAiProvider, type WorkersAiBinding } from "./ai/providers";
 import { buildApp } from "./app";
 import { loadConfig } from "./config";
 import type { AppContext } from "./context";
@@ -30,6 +31,8 @@ import { runMaintenance } from "./services/retention";
 export { RealtimeHub } from "./realtime/hub";
 
 interface Env extends HubEnv {
+  /** Workers AI, used when AI_PROVIDER=workers-ai. */
+  AI?: WorkersAiBinding;
   [key: string]: unknown;
 }
 
@@ -67,8 +70,16 @@ async function createApp(env: Env): Promise<FastifyInstance> {
   });
   let app: FastifyInstance | null = null;
   const bus = new HubPublisher(env, (label, send) => app!.ctx.tasks.run(label, send));
+  // The AI binding isn't usable while the Worker starts up, so look it up on each call.
+  const ai: WorkersAiBinding = {
+    run: (model, inputs) => {
+      if (!env.AI) throw new Error('AI_PROVIDER=workers-ai needs the "ai" binding in wrangler.jsonc');
+      return env.AI.run(model, inputs);
+    },
+  };
   app = await buildApp({
     config,
+    ...(config.aiProvider === "workers-ai" ? { provider: new WorkersAiProvider(ai, config.AI_MODEL) } : {}),
     runtime: {
       resolveDb: () => {
         const db = requestDb.getStore();

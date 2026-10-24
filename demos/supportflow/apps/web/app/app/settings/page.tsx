@@ -26,6 +26,12 @@ import { ApiError, api, errorMessage } from "@/lib/api";
 import { fieldErrors } from "@/lib/forms";
 import { cn } from "@/lib/utils";
 
+const PROVIDER_NAMES: Record<string, string> = {
+  anthropic: "Anthropic",
+  openai: "OpenAI",
+  "workers-ai": "Cloudflare Workers AI",
+};
+
 const MODE_DETAIL: Record<AiMode, string> = {
   off: "No AI drafts or replies. Your team answers everything.",
   suggest: "Agents click “Suggest reply” to get a draft when they want one.",
@@ -135,7 +141,7 @@ function AiSettings({ org, disabled }: { org: OrgDto; disabled: boolean }) {
         session.ai.provider === "extractive"
           ? "This server has no language model configured, so the assistant answers with excerpts from your articles. Summaries are unavailable."
           : session.ai.available
-            ? `Using ${session.ai.provider}${session.ai.model ? ` (${session.ai.model})` : ""}.`
+            ? `Using ${PROVIDER_NAMES[session.ai.provider] ?? session.ai.provider}${session.ai.model ? ` (${session.ai.model})` : ""}.`
             : "AI is disabled on this server."
       }
     >

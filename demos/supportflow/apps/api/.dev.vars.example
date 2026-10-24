@@ -6,3 +6,6 @@ COOKIE_SECURE=false
 # Lets the e2e billing tests run locally; production refuses test billing.
 NODE_ENV=development
 BILLING_MODE=test
+# Workers AI always runs on Cloudflare (even in `wrangler dev`) and uses the daily allowance;
+# the e2e suite expects excerpt replies.
+AI_PROVIDER=extractive

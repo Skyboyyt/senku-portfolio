@@ -106,6 +106,65 @@ export class OpenAIProvider implements LlmProvider {
   }
 }
 
+export const DEFAULT_WORKERS_AI_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+
+/** The part of the Workers AI binding (`env.AI`) this provider uses. */
+export interface WorkersAiBinding {
+  run(model: string, inputs: Record<string, unknown>): Promise<unknown>;
+}
+
+interface WorkersAiOutput {
+  /** Parsed JSON in JSON mode, otherwise text. */
+  response?: unknown;
+  choices?: { message?: { content?: string | null; refusal?: string | null }; finish_reason?: string | null }[];
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+}
+
+/**
+ * Cloudflare Workers AI through the Worker's `AI` binding: no API key, and the free plan
+ * includes a daily allowance. Only available when the API runs on Workers.
+ */
+export class WorkersAiProvider implements LlmProvider {
+  readonly name = "workers-ai";
+  readonly generative = true;
+
+  constructor(
+    private readonly binding: WorkersAiBinding,
+    readonly model: string = DEFAULT_WORKERS_AI_MODEL,
+  ) {}
+
+  async complete(request: CompletionRequest): Promise<CompletionResult> {
+    const run = this.binding.run(this.model, {
+      messages: [
+        { role: "system", content: request.system },
+        { role: "user", content: request.prompt },
+      ],
+      max_tokens: request.maxTokens,
+      ...(request.json ? { response_format: { type: "json_schema", json_schema: REPLY_JSON_SCHEMA } } : {}),
+    }) as Promise<WorkersAiOutput>;
+    // The binding takes no abort signal, so stop waiting when the request is aborted.
+    const output = await new Promise<WorkersAiOutput>((resolve, reject) => {
+      const abort = () => reject(request.signal.reason ?? new DOMException("Aborted", "AbortError"));
+      if (request.signal.aborted) return abort();
+      request.signal.addEventListener("abort", abort, { once: true });
+      run.then(resolve, reject).finally(() => request.signal.removeEventListener("abort", abort));
+    });
+
+    const choice = output.choices?.[0];
+    if (choice?.message?.refusal) throw new ProviderRefusalError(choice.message.refusal);
+    if (choice?.finish_reason === "length" && request.json) {
+      throw new Error("The model reply was cut off before it finished");
+    }
+    const content = choice?.message?.content ?? output.response;
+    const text = typeof content === "string" ? content : content == null ? "" : JSON.stringify(content);
+    return {
+      text: text.trim(),
+      inputTokens: output.usage?.prompt_tokens ?? 0,
+      outputTokens: output.usage?.completion_tokens ?? 0,
+    };
+  }
+}
+
 /**
  * No language model. Replies are assembled from the best-matching knowledge-base passage
  * by the assistant itself, and summaries are unavailable. Lets the product work without
@@ -140,6 +199,9 @@ export function createProvider(config: Config): LlmProvider {
     case "openai":
       if (!config.AI_MODEL) throw new Error("AI_MODEL is required for AI_PROVIDER=openai");
       return new OpenAIProvider(config.OPENAI_API_KEY ?? "", config.AI_MODEL, config.AI_TIMEOUT_MS);
+    case "workers-ai":
+      // The Worker entry builds this provider from its AI binding and passes it in.
+      throw new Error("AI_PROVIDER=workers-ai only works when the API runs on Cloudflare Workers");
     case "extractive":
       return new ExtractiveProvider();
     case "none":
