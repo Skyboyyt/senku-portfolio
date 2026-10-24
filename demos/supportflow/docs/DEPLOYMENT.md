@@ -88,7 +88,7 @@ The web app also runs on Vercel at **https://supportflow-omega.vercel.app** (pro
 
 - Vercel environment variables: `API_INTERNAL_URL` and `NEXT_PUBLIC_API_URL` set to the API Worker URL, `NEXT_PUBLIC_SITE_URL` set to the Vercel URL, `NEXT_PUBLIC_DEMO_WIDGET_KEY`, `NEXT_PUBLIC_BILLING_MODE=disabled`, `CLIENT_IP_HEADER=x-real-ip`, and `PROXY_SHARED_SECRET` (sensitive, the same value as both Workers; see the next point).
 - The Vercel origin is added to the API's `WEB_ORIGIN` in `apps/api/wrangler.jsonc` and to the demo widget's allowed websites (re-run `demo:setup` with both origins in `WEB_ORIGIN`).
-- Without `PROXY_SHARED_SECRET` on Vercel the site still works, but the API can't trust the forwarded visitor IP, so rate limits apply per Vercel server instead of per visitor. **It isn't set on the live Vercel project yet.** To set it, generate a new value, put it on both Workers (`wrangler secret put PROXY_SHARED_SECRET` in `apps/api` and `apps/web`) and on Vercel as a sensitive variable, then redeploy the Vercel project.
+- Without `PROXY_SHARED_SECRET` on Vercel the site still works, but the API can't trust the forwarded visitor IP, so rate limits apply per Vercel server instead of per visitor. It is set on the live project. To rotate it, put a new value on both Workers (`wrangler secret put PROXY_SHARED_SECRET` in `apps/api` and `apps/web`) and on Vercel, then redeploy the Vercel project.
 - The `WEB_ORIGIN` list puts the Vercel origin first because invitation links and billing return URLs use the first entry.
 
 ## B. Render + Vercel + Neon
