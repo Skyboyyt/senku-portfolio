@@ -1,0 +1,37 @@
+// SupportFlow API on Cloudflare Workers (free plan). See docs/DEPLOYMENT.md.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "supportflow-api",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  // Fastify needs pino's Node build; the bundler would otherwise pick its browser build.
+  "alias": { "pino": "./node_modules/pino/pino.js" },
+  // widget.js is served straight from the edge; everything else reaches the Worker.
+  "assets": { "directory": "./public", "run_worker_first": false },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      // Printed by `wrangler hyperdrive create supportflow-db`; replace it if you deploy to another account.
+      "id": "6523bb6c38bc4668bfd265795cb86899",
+      "localConnectionString": "postgres://postgres:postgres@localhost:5432/supportflow"
+    }
+  ],
+  "durable_objects": { "bindings": [{ "name": "REALTIME", "class_name": "RealtimeHub" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RealtimeHub"] }],
+  // Retention and demo-workspace cleanup, hourly.
+  "triggers": { "crons": ["17 * * * *"] },
+  // Non-secret settings. Secrets (PROXY_SHARED_SECRET, ANTHROPIC_API_KEY, Stripe keys)
+  // are set with `wrangler secret put`.
+  "vars": {
+    // The web app runs on both Vercel and Cloudflare; comma-separate every origin it's served from.
+    // The first one is used in invitation links and billing return URLs.
+    "WEB_ORIGIN": "https://supportflow-omega.vercel.app,https://supportflow-skyboy.vercel.app,https://supportflow-web.sanifahad24.workers.dev",
+    "API_PUBLIC_URL": "https://supportflow-api.sanifahad24.workers.dev",
+    "COOKIE_SECURE": "true",
+    "BILLING_MODE": "disabled",
+    "LOG_LEVEL": "info"
+  }
+}
