@@ -59,8 +59,8 @@ export default function PrivacyPage() {
           <h2>AI processing</h2>
           <p>
             When a business enables AI features, the visitor&apos;s recent messages and relevant passages from that
-            business&apos;s published help articles are sent to the configured AI provider (for example Anthropic or
-            OpenAI) to produce a reply. Internal notes are never sent. Each request contains one workspace&apos;s data only.
+            business&apos;s published help articles are sent to the configured AI provider (Cloudflare Workers AI on this
+            site; the software also supports Anthropic and OpenAI) to produce a reply. Internal notes are never sent. Each request contains one workspace&apos;s data only.
             Providers process this data under their API terms; we do not ask them to train models on it. Every AI-written
             message is labelled in the chat.
           </p>

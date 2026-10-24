@@ -75,6 +75,6 @@ Testing caught real bugs before release: an AI reply that arrived before the wid
 - Web app: https://supportflow-omega.vercel.app (Vercel), also https://supportflow-web.sanifahad24.workers.dev (Cloudflare Workers)
 - API health: https://supportflow-api.sanifahad24.workers.dev/health/ready
 
-The API runs on Cloudflare Workers with Postgres on Neon (see [DEPLOYMENT.md](DEPLOYMENT.md), setup A). The live site answers with help-centre excerpts (no AI key is configured) and billing is disabled.
+The API runs on Cloudflare Workers with Postgres on Neon (see [DEPLOYMENT.md](DEPLOYMENT.md), setup A). AI replies come from Llama 3.3 70B on Cloudflare Workers AI within the free daily allowance, and billing is disabled.
 
-*Screenshots show a development workspace with sample conversations created through the real chat widget. The demo business, Larkspur Coffee Roasters, is fictional. Without an AI key configured, replies are excerpts from the help centre ("Here's what our help article says…").*
+*Screenshots show a development workspace with sample conversations created through the real chat widget. The demo business, Larkspur Coffee Roasters, is fictional. The screenshots were taken without a language model, so their replies are excerpts from the help centre ("Here's what our help article says…"); the live site writes replies with Workers AI.*

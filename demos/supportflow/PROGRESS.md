@@ -55,7 +55,7 @@ Kept up to date at the end of every phase so work can resume from here. Last upd
 
 **Needs the owner (credentials or paid services):**
 
-- **AI provider key** — without `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` the app uses the extractive provider. LLM paths are covered by tests with a mock provider but haven't been run against a live model.
+- **AI provider** — the live site uses Cloudflare Workers AI (Llama 3.3 70B) on the free daily allowance, verified end to end against the live site. Anthropic and OpenAI need a paid key and haven't been run against a live model.
 - **Stripe** — test-mode keys, three prices and a webhook are needed for real checkout. The Stripe paths are tested against a mocked Stripe API.
 
 **Not implemented (documented as limitations):**

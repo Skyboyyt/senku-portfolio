@@ -68,6 +68,7 @@ test.describe("public website", () => {
     await chat.getByLabel("Message", { exact: true }).fill("How long does shipping take to Europe?");
     await chat.getByRole("button", { name: "Send message" }).click();
     await expect(chat.getByText("How long does shipping take to Europe?")).toBeVisible();
-    await expect(chat.getByText(/Shipping times and costs/)).toBeVisible({ timeout: 15_000 });
+    // Excerpt replies name the article; a language model answers with its contents.
+    await expect(chat.getByText(/Shipping times and costs|3[–-]5 business days/).last()).toBeVisible({ timeout: 15_000 });
   });
 });

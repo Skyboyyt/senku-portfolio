@@ -47,7 +47,7 @@ export class ProviderRefusalError extends Error {
 }
 
 export interface LlmProvider {
-  /** Stable identifier recorded in usage rows: anthropic, openai, extractive, none. */
+  /** Stable identifier recorded in usage rows: anthropic, openai, workers-ai, extractive, none. */
   readonly name: string;
   readonly model: string | null;
   /** False for providers that cannot write free text (extractive, none). */

@@ -21,6 +21,8 @@
   ],
   "durable_objects": { "bindings": [{ "name": "REALTIME", "class_name": "RealtimeHub" }] },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RealtimeHub"] }],
+  // Workers AI writes the AI replies (AI_PROVIDER below). The free plan includes a daily allowance.
+  "ai": { "binding": "AI" },
   // Retention and demo-workspace cleanup, hourly.
   "triggers": { "crons": ["17 * * * *"] },
   // Non-secret settings. Secrets (PROXY_SHARED_SECRET, ANTHROPIC_API_KEY, Stripe keys)
@@ -32,6 +34,8 @@
     "API_PUBLIC_URL": "https://supportflow-api.sanifahad24.workers.dev",
     "COOKIE_SECURE": "true",
     "BILLING_MODE": "disabled",
+    // Set AI_MODEL to use another Workers AI model; the default is Llama 3.3 70B.
+    "AI_PROVIDER": "workers-ai",
     "LOG_LEVEL": "info"
   }
 }

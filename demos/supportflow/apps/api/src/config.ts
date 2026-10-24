@@ -37,7 +37,7 @@ const envSchema = z
     /** Number of reverse proxies in front of the API (for the client IP). */
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
 
-    AI_PROVIDER: z.enum(["anthropic", "openai", "extractive", "none"]).optional(),
+    AI_PROVIDER: z.enum(["anthropic", "openai", "workers-ai", "extractive", "none"]).optional(),
     AI_MODEL: z.string().optional(),
     AI_TIMEOUT_MS: z.coerce.number().int().min(1000).max(120000).default(25000),
     ANTHROPIC_API_KEY: z.string().optional(),
@@ -97,7 +97,7 @@ export type Env = z.infer<typeof envSchema>;
 export interface Config extends Env {
   isProduction: boolean;
   cookieSecure: boolean;
-  aiProvider: "anthropic" | "openai" | "extractive" | "none";
+  aiProvider: "anthropic" | "openai" | "workers-ai" | "extractive" | "none";
   /** Signs dashboard WebSocket tickets. Shared across instances when PROXY_SHARED_SECRET is set. */
   realtimeSecret: string;
 }

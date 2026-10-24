@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { extractiveReply } from "../src/ai/assistant";
 import { chunkArticle, splitImport } from "../src/ai/chunk";
 import { asksForHuman, detectSensitiveIntent, escapeForPrompt, findUnsupportedLinks, makesUnauthorizedCommitment } from "../src/ai/guards";
+import { WorkersAiProvider, type WorkersAiBinding } from "../src/ai/providers";
 import { queryTerms } from "../src/ai/retrieval";
+import { ProviderRefusalError, REPLY_JSON_SCHEMA } from "../src/ai/types";
 import { signTicket, verifyTicket } from "../src/realtime/tickets";
 import { isOriginAllowed } from "../src/routes/widget-public";
 
@@ -90,5 +92,47 @@ describe("realtime tickets", () => {
     expect(verifyTicket("y".repeat(40), ticket)).toBeNull();
     expect(verifyTicket(secret, ticket, Date.now() + 61_000)).toBeNull();
     expect(verifyTicket(secret, "garbage")).toBeNull();
+  });
+});
+
+describe("Workers AI provider", () => {
+  const request = (json = true, signal = new AbortController().signal) => ({ system: "sys", prompt: "question", maxTokens: 300, json, signal });
+  const binding = (output: unknown, calls: unknown[][] = []): WorkersAiBinding => ({
+    run: (...args: unknown[]) => {
+      calls.push(args);
+      return Promise.resolve(output);
+    },
+  });
+
+  it("sends a JSON-mode chat request and reads the reply and token usage", async () => {
+    const calls: unknown[][] = [];
+    const reply = '{"reply":"5-7 days","confidence":0.9,"needs_human":false,"reason":"","source_ids":[1]}';
+    const provider = new WorkersAiProvider(
+      binding({ choices: [{ message: { content: reply }, finish_reason: "stop" }], usage: { prompt_tokens: 92, completion_tokens: 47 } }, calls),
+    );
+    expect(await provider.complete(request())).toEqual({ text: reply, inputTokens: 92, outputTokens: 47 });
+    expect(calls[0]![0]).toBe("@cf/meta/llama-3.3-70b-instruct-fp8-fast");
+    expect(calls[0]![1]).toMatchObject({
+      messages: [{ role: "system", content: "sys" }, { role: "user", content: "question" }],
+      max_tokens: 300,
+      response_format: { type: "json_schema", json_schema: REPLY_JSON_SCHEMA },
+    });
+  });
+
+  it("falls back to the parsed response field and omits JSON mode for plain text", async () => {
+    const calls: unknown[][] = [];
+    const provider = new WorkersAiProvider(binding({ response: { reply: "hi" } }, calls), "@cf/test/model");
+    expect((await provider.complete(request(false))).text).toBe('{"reply":"hi"}');
+    expect(calls[0]![0]).toBe("@cf/test/model");
+    expect(calls[0]![1]).not.toHaveProperty("response_format");
+  });
+
+  it("rejects refusals, cut-off JSON and aborted requests", async () => {
+    await expect(new WorkersAiProvider(binding({ choices: [{ message: { refusal: "no" } }] })).complete(request())).rejects.toBeInstanceOf(ProviderRefusalError);
+    await expect(new WorkersAiProvider(binding({ choices: [{ message: { content: "{" }, finish_reason: "length" }] })).complete(request())).rejects.toThrow(/cut off/);
+    const controller = new AbortController();
+    const pending = new WorkersAiProvider({ run: () => new Promise(() => {}) }).complete(request(true, controller.signal));
+    controller.abort();
+    await expect(pending).rejects.toMatchObject({ name: "AbortError" });
   });
 });

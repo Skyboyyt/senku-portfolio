@@ -8,7 +8,7 @@ Designed and built by Fahad Sani as a full-stack portfolio project.
 | --- | --- |
 | Web app | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, Radix primitives, Motion, Lucide |
 | API | Fastify 5, TypeScript, Drizzle ORM, PostgreSQL, WebSockets, Zod |
-| AI | Anthropic or OpenAI, with retrieval over Postgres full-text search; a no-LLM "excerpt" mode |
+| AI | Anthropic, OpenAI or Cloudflare Workers AI, with retrieval over Postgres full-text search; a no-LLM "excerpt" mode |
 | Billing | Stripe Checkout, Customer Portal and signed webhooks; dev-only test mode |
 | Tests | Vitest (unit + API integration on real Postgres), Playwright (end-to-end + axe accessibility) |
 
@@ -45,7 +45,7 @@ pnpm dev                         # API on :4000, web on :3000
 
 Open http://localhost:3000. With the seed loaded, sign in as `owner@supportflow.test` / `supportflow-dev` (or `agent@supportflow.test`). These accounts exist only in your local database; the seed script refuses to run with `NODE_ENV=production`.
 
-Without an AI key the API uses the **extractive** provider: replies are excerpts of the best-matching article, clearly worded as such, and summaries are unavailable. Set `ANTHROPIC_API_KEY` (or `OPENAI_API_KEY` + `AI_MODEL`) to use a language model.
+Without an AI key the API uses the **extractive** provider: replies are excerpts of the best-matching article, clearly worded as such, and summaries are unavailable. Set `ANTHROPIC_API_KEY` (or `OPENAI_API_KEY` + `AI_MODEL`) to use a language model. On Cloudflare Workers, `AI_PROVIDER=workers-ai` uses Workers AI through the `AI` binding instead, with no key (Llama 3.3 70B by default; `AI_MODEL` picks another model).
 
 `BILLING_MODE=test` lets the owner switch plans instantly without payment so plan limits can be tried. It is refused at startup when `NODE_ENV=production`.
 
@@ -88,4 +88,4 @@ These are deliberate scope limits, documented rather than faked:
 - **Rate limits** are kept in memory per instance (same reason).
 - **Retrieval** uses Postgres full-text search, which handles keyword overlap well but not paraphrases. Embeddings (pgvector) would improve recall; the retrieval module is isolated for that change.
 - **Attachments** aren't supported in chat, so there is no file-upload surface.
-- **Live** at https://supportflow-omega.vercel.app (web app on Vercel; API on Cloudflare Workers; Postgres on Neon; a Cloudflare copy of the web app runs at https://supportflow-web.sanifahad24.workers.dev) with the extractive AI provider and billing disabled. See [Deployment](docs/DEPLOYMENT.md).
+- **Live** at https://supportflow-omega.vercel.app (web app on Vercel; API on Cloudflare Workers; Postgres on Neon; a Cloudflare copy of the web app runs at https://supportflow-web.sanifahad24.workers.dev) with AI replies from Cloudflare Workers AI (free daily allowance) and billing disabled. See [Deployment](docs/DEPLOYMENT.md).
