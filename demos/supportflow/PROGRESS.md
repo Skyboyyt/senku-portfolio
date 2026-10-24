@@ -14,7 +14,7 @@ Kept up to date at the end of every phase so work can resume from here. Last upd
 | 6 | Embeddable widget and customisation | Done |
 | 7 | Analytics, team management, billing | Done |
 | 8 | Security review, testing, documentation, deployment readiness, portfolio | Done |
-| 9 | Deployment (Cloudflare Workers + Neon) | Done: https://supportflow-web.sanifahad24.workers.dev |
+| 9 | Deployment (Cloudflare Workers + Neon, web app also on Vercel) | Done: https://supportflow-omega.vercel.app |
 
 ## Verification (last run)
 

@@ -2,7 +2,7 @@
 
 **Role:** product design, full-stack engineering and AI integration (solo)  
 **Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS, Fastify 5, PostgreSQL, Drizzle, WebSockets, Anthropic/OpenAI, Stripe  
-**Status:** live at [supportflow-web.sanifahad24.workers.dev](https://supportflow-web.sanifahad24.workers.dev) ([deployment guide](DEPLOYMENT.md))
+**Status:** live at [supportflow-omega.vercel.app](https://supportflow-omega.vercel.app) ([deployment guide](DEPLOYMENT.md))
 
 ![The inbox with a refund request held for a person, the AI's draft, an internal note and the linked ticket](screenshots/inbox-handoff.webp)
 
@@ -72,9 +72,9 @@ Testing caught real bugs before release: an AI reply that arrived before the wid
 
 ## Deployment links
 
-- Web app: https://supportflow-web.sanifahad24.workers.dev
+- Web app: https://supportflow-omega.vercel.app (Vercel), also https://supportflow-web.sanifahad24.workers.dev (Cloudflare Workers)
 - API health: https://supportflow-api.sanifahad24.workers.dev/health/ready
 
-Both run on Cloudflare Workers with Postgres on Neon (see [DEPLOYMENT.md](DEPLOYMENT.md), setup A). The live site answers with help-centre excerpts (no AI key is configured) and billing is disabled.
+The API runs on Cloudflare Workers with Postgres on Neon (see [DEPLOYMENT.md](DEPLOYMENT.md), setup A). The live site answers with help-centre excerpts (no AI key is configured) and billing is disabled.
 
 *Screenshots show a development workspace with sample conversations created through the real chat widget. The demo business, Larkspur Coffee Roasters, is fictional. Without an AI key configured, replies are excerpts from the help centre ("Here's what our help article says…").*

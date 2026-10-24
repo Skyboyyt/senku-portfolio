@@ -88,4 +88,4 @@ These are deliberate scope limits, documented rather than faked:
 - **Rate limits** are kept in memory per instance (same reason).
 - **Retrieval** uses Postgres full-text search, which handles keyword overlap well but not paraphrases. Embeddings (pgvector) would improve recall; the retrieval module is isolated for that change.
 - **Attachments** aren't supported in chat, so there is no file-upload surface.
-- **Live** at https://supportflow-web.sanifahad24.workers.dev (Cloudflare Workers and Neon, free plans) with the extractive AI provider and billing disabled. See [Deployment](docs/DEPLOYMENT.md).
+- **Live** at https://supportflow-omega.vercel.app (web app on Vercel; API on Cloudflare Workers; Postgres on Neon; a Cloudflare copy of the web app runs at https://supportflow-web.sanifahad24.workers.dev) with the extractive AI provider and billing disabled. See [Deployment](docs/DEPLOYMENT.md).

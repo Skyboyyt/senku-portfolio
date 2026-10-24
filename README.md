@@ -13,7 +13,7 @@ To host elsewhere, upload the contents of this folder and preserve the folder st
 - script.js: theme initialization, accessible menu, theme persistence, portrait fallback, spotlight, reveals, current year.
 - assets/: portrait and any future project screenshots.
 - demos/pulse-grid/: Pulse Grid, a Web Audio drum machine with shareable links and WAV export. See its README.
-- demos/supportflow/: SupportFlow AI, a full-stack multi-tenant customer support app (Next.js, Fastify, PostgreSQL, AI). It has its own README, documentation and test suites, and is live at https://supportflow-web.sanifahad24.workers.dev (Cloudflare Workers and Neon). Its portfolio screenshots are in `assets/supportflow/` and were captured from the running app with a development workspace and a fictional demo business.
+- demos/supportflow/: SupportFlow AI, a full-stack multi-tenant customer support app (Next.js, Fastify, PostgreSQL, AI). It has its own README, documentation and test suites, and is live at https://supportflow-omega.vercel.app (web app on Vercel, API on Cloudflare Workers, Postgres on Neon). Its portfolio screenshots are in `assets/supportflow/` and were captured from the running app with a development workspace and a fictional demo business.
 
 ## Live demo sites
 Each demo is also deployed as its own Vercel project from this repository (Root Directory set to the demo folder), and the portfolio buttons link to these addresses:

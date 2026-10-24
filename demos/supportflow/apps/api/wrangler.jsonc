@@ -26,7 +26,9 @@
   // Non-secret settings. Secrets (PROXY_SHARED_SECRET, ANTHROPIC_API_KEY, Stripe keys)
   // are set with `wrangler secret put`.
   "vars": {
-    "WEB_ORIGIN": "https://supportflow-web.sanifahad24.workers.dev",
+    // The web app runs on both Vercel and Cloudflare; comma-separate every origin it's served from.
+    // The first one is used in invitation links and billing return URLs.
+    "WEB_ORIGIN": "https://supportflow-omega.vercel.app,https://supportflow-skyboy.vercel.app,https://supportflow-web.sanifahad24.workers.dev",
     "API_PUBLIC_URL": "https://supportflow-api.sanifahad24.workers.dev",
     "COOKIE_SECURE": "true",
     "BILLING_MODE": "disabled",
