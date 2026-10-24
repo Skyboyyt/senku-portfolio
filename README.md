@@ -62,6 +62,17 @@ Each project has a native details/summary section. Click the label, or focus it 
 
 The first visit in a browser tab plays a short SENKU / SKYBOY intro (about 3 seconds). Click or press any key to skip it. It does not replay until the tab is closed (sessionStorage), and it is skipped when JavaScript is off. Visitors who prefer reduced motion (for example, Windows with "Animation effects" turned off) see a still version of the same screen, with no scramble or flicker. A CSS failsafe hides it after 6 seconds if the script never runs.
 
+## Motion design
+
+All motion lives in the "Motion system" section at the end of styles.css and the reveal code in script.js. It uses one set of easing curves (`--ease-out`, `--ease-in`, `--ease-in-out`, `--ease-soft`) and animates only opacity, translate, scale and clip-path, so nothing shifts the layout. Once something has animated in, its temporary classes are removed and the page is exactly as designed.
+
+- **Hero entrance:** after the intro (or straight away on return visits), the headline words rise out of their own line one by one, the supporting copy and portrait settle in, and the hairline under the hero draws across. The words are wrapped in `.hw` spans in index.html; keep that wrapping if you edit the headline.
+- **Rotating phrase:** the current phrase slides up out of its line while the next rises in from below.
+- **Scroll reveals:** section headings rise line by line out of a mask, project media opens from a slightly inset frame while the image settles, divider lines draw across, and text, cards and skill chips ease up, staggered when several arrive together. Only content below the fold at load is hidden, and anything scrolled straight past is revealed at once.
+- **Scroll-linked depth:** in browsers with scroll-driven animations, the hero copy sinks and fades as you scroll away and the portrait drifts inside its frame. It runs on the compositor with no scroll listeners; other browsers simply skip it.
+- **Interactions:** the theme switch spreads the new theme in a circle from the button you pressed (View Transitions), the sun and moon icons turn in, buttons give press feedback, mobile menu links follow the panel in, the game player fades and scales open, screenshot switches crossfade once the new image is decoded, and "Behind the project" expands smoothly where the browser can animate to auto height.
+- **Accessibility:** with reduced motion turned on, every animation is skipped and content appears immediately. Without JavaScript nothing is hidden.
+
 ## Services, sharing and 404
 
 - **Services** ("What I can help with") lists four kinds of work, each linked to a real project as proof. Keep every card tied to work that exists.
