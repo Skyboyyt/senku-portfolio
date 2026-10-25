@@ -13,9 +13,12 @@ export default async function middleware(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const accept = request.headers.get('accept') ?? '';
 
+  const documentRequest = !accept || accept.includes('text/html') || accept.includes('*/*');
+  const looksLikeAsset = /\\.[a-z0-9]{1,8}$/i.test(url.pathname);
   if (
     request.method !== 'GET' ||
-    !accept.includes('text/html') ||
+    !documentRequest ||
+    looksLikeAsset ||
     request.headers.has('rsc') ||
     request.headers.has('next-router-prefetch') ||
     url.searchParams.has('_rsc') ||
