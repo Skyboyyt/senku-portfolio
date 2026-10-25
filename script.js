@@ -86,7 +86,7 @@ if('IntersectionObserver' in window&&!reduced.matches){
 // 3D pointer response: product frames tilt toward the pointer, floating screenshots and the hero's outline
 // echoes shift with depth. Mouse and trackpad only; never on touch or with reduced motion.
 function follow(area,target,xVar,yVar){let raf=0;
- area.addEventListener('pointermove',e=>{if(!fine.matches||reduced.matches||e.pointerType==='touch')return;cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const r=area.getBoundingClientRect();target.style.setProperty(xVar,(((e.clientX-r.left)/r.width-.5)*2).toFixed(3));target.style.setProperty(yVar,(((e.clientY-r.top)/r.height-.5)*2).toFixed(3))})});
+ area.addEventListener('pointermove',e=>{if(!fine.matches||reduced.matches||e.pointerType==='touch'||(e.target.closest&&e.target.closest('.vid-toggle')))return;cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>{const r=area.getBoundingClientRect();target.style.setProperty(xVar,(((e.clientX-r.left)/r.width-.5)*2).toFixed(3));target.style.setProperty(yVar,(((e.clientY-r.top)/r.height-.5)*2).toFixed(3))})});
  area.addEventListener('pointerleave',()=>{cancelAnimationFrame(raf);target.style.setProperty(xVar,0);target.style.setProperty(yVar,0)})}
 document.querySelectorAll('[data-tilt]').forEach(stage=>follow(stage.closest('.scene')||stage,stage,'--tx','--ty'));
 document.querySelectorAll('[data-parallax]').forEach(field=>follow(field.closest('.scene')||field,field,'--px','--py'));
@@ -178,9 +178,36 @@ document.addEventListener('DOMContentLoaded', () => {
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'),toast=document.querySelector('.toast');let toastTimer;
 function say(text){toast.textContent=text;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),2600)}
 
-// Screenshot galleries (Battle of Shinkai, SupportFlow, Blacklist): crossfade once the new image has decoded.
-document.querySelectorAll('.shots').forEach(g=>{const main=g.querySelector('.shot-main'),thumbs=[...g.querySelectorAll('.shot-thumb')];
+// Screenshot galleries: crossfade once the new image has decoded. (Galleries around a recording use chapters instead.)
+document.querySelectorAll('.shots').forEach(g=>{const main=g.querySelector('.shot-main'),thumbs=[...g.querySelectorAll('.shot-thumb')];if(!main||main.tagName==='VIDEO')return;
 thumbs.forEach(t=>t.addEventListener('click',()=>{if(t.getAttribute('aria-pressed')==='true')return;thumbs.forEach(o=>o.setAttribute('aria-pressed',String(o===t)));const swap=()=>{main.src=t.dataset.src;main.alt=t.dataset.alt;const shown=()=>main.classList.remove('swap');typeof main.decode==='function'?main.decode().then(shown,shown):shown()};if(reduced.matches)swap();else{main.classList.add('swap');setTimeout(swap,220)}}))});
+
+// Live recordings: each loads as it nears the screen, plays while it is in view and pauses when it leaves.
+// The button pauses or plays it; thumbnails jump to chapters and show progress. With reduced motion nothing
+// plays until the visitor presses play.
+const smallVideo=()=>Math.min(innerWidth,1600)*Math.min(devicePixelRatio||1,2)<1100;
+document.querySelectorAll('video.live').forEach(v=>{
+ const device=v.closest('.device'),btn=device&&device.querySelector('.vid-toggle'),gallery=v.closest('.shots'),thumbs=gallery?[...gallery.querySelectorAll('.shot-thumb[data-t]')]:[];
+ let loaded=false,userPaused=false,inView=false;
+ const load=()=>{if(loaded)return;loaded=true;if(smallVideo()&&v.dataset.srcSm)v.src=v.dataset.srcSm;v.preload='auto'};
+ const play=()=>{load();const p=v.play();if(p&&p.catch)p.catch(()=>{})};
+ const sync=()=>{if(inView&&!userPaused&&!reduced.matches&&!document.hidden)play();else if(!v.paused)v.pause()};
+ const label=()=>{const on=!v.paused;if(device)device.classList.toggle('is-playing',on);if(btn)btn.setAttribute('aria-label',(on?'Pause':'Play')+' the '+(v.dataset.name||'')+' recording')};
+ v.addEventListener('play',label);v.addEventListener('pause',label);label();
+ if(btn)btn.addEventListener('click',()=>{if(v.paused){userPaused=false;play()}else{userPaused=true;v.pause()}});
+ thumbs.forEach(th=>th.addEventListener('click',()=>{load();const go=()=>{v.currentTime=+th.dataset.t;if(!reduced.matches&&!userPaused)play()};v.readyState>=1?go():v.addEventListener('loadedmetadata',go,{once:true})}));
+ if(thumbs.length)v.addEventListener('timeupdate',()=>{let idx=0;thumbs.forEach((th,i)=>{if(v.currentTime>=+th.dataset.t-.05)idx=i});
+  thumbs.forEach((th,i)=>th.setAttribute('aria-pressed',String(i===idx)));const cur=thumbs[idx],start=+cur.dataset.t,end=idx+1<thumbs.length?+thumbs[idx+1].dataset.t:(v.duration||start+1);cur.style.setProperty('--p',Math.min(1,Math.max(0,(v.currentTime-start)/(end-start))).toFixed(3))});
+ if('IntersectionObserver' in window&&device){
+  new IntersectionObserver(([e])=>{if(e.isIntersecting&&!reduced.matches)load()},{rootMargin:'500px 0px'}).observe(device);
+  new IntersectionObserver(([e])=>{inView=e.isIntersecting;sync()},{threshold:.3}).observe(device);
+ }
+ document.addEventListener('visibilitychange',sync);reduced.addEventListener('change',sync);
+});
+
+// Learnspace's illustrated flow starts running once its cards have arrived.
+const steps=document.querySelector('.steps');
+if(steps&&!reduced.matches){const check=setInterval(()=>{if(!steps.querySelector('.r-hide,.r-in')&&steps.getBoundingClientRect().top<innerHeight){steps.classList.add('is-working');clearInterval(check)}},400)}
 
 // Play the game in a dialog on larger screens; phones go straight to the full game tab.
 const modal=document.getElementById('game-modal'),frame=modal.querySelector('.game-frame'),play=document.querySelector('.play-game'),large=matchMedia('(min-width:900px) and (pointer:fine)');let opener=null;
