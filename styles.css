@@ -176,7 +176,7 @@ html.js:not(.split-done) [data-split]{opacity:0;animation:show-anyway 0s 2.5s fo
 .device-bar span{margin-left:10px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .screen{position:relative;overflow:hidden;border-radius:9px;background:#000;aspect-ratio:16/9}
 .screen img{width:100%;height:100%;object-fit:cover;object-position:top}
-.screen.tall{aspect-ratio:1280/879}.screen.wide{aspect-ratio:16/10}.screen.pulse-shot{aspect-ratio:1180/628}
+.screen.tall{aspect-ratio:1280/880}.screen.wide{aspect-ratio:16/10}.screen.pulse-shot{aspect-ratio:1180/628}
 .screen-badge{position:absolute;left:22px;bottom:22px;padding:6px 12px;border-radius:999px;background:rgba(8,10,16,.82);color:var(--cream);font:500 .66rem var(--mono);text-transform:uppercase;letter-spacing:.06em}
 .phone{position:absolute;bottom:-9%;width:24%;padding:clamp(4px,.5vw,7px);border:3px solid #5a5d64;border-radius:clamp(18px,2.6vw,32px);background:#0c0d0f;transform:translateZ(80px);box-shadow:0 40px 60px -26px rgba(0,0,0,.7)}
 .phone::before{content:'';position:absolute;z-index:2;top:clamp(9px,1.1vw,14px);left:35%;width:30%;height:clamp(5px,.6vw,8px);border-radius:9px;background:#0c0d0f}
@@ -328,7 +328,7 @@ html:not(.js) .shot-thumbs{display:none}
 .back-top{font-weight:600}
 .hud{position:fixed;left:var(--gutter);bottom:16px;z-index:35;display:flex;gap:16px;font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#fff;mix-blend-mode:difference;pointer-events:none}
 .progress{position:fixed;left:0;right:0;bottom:0;z-index:36;height:4px;background:var(--orange);transform:scaleX(var(--progress,0));transform-origin:left;pointer-events:none}
-html:not(.js) .hud{display:none}
+html:not(.js) .hud,html:not(.js) .vid-toggle{display:none}
 
 /* Game player, toast, confetti */
 .game-modal{width:min(1280px,calc(100% - 32px));max-height:calc(100dvh - 32px);padding:0;border:1px solid rgba(243,239,228,.12);border-radius:16px;background:var(--night);color:var(--cream);overflow:hidden;box-shadow:0 30px 100px rgba(0,0,0,.6);opacity:0;scale:.97;transition:opacity .3s var(--ease-soft),scale .45s var(--ease-out),overlay .3s allow-discrete,display .3s allow-discrete}
@@ -439,7 +439,7 @@ html.hero-in .hero .marquee{animation:fade-in 1.2s 1s var(--ease-soft) backwards
 }}
 
 /* Pause looping motion in scenes that are off screen. */
-.js .scene:not(.is-live) :is(.marquee-track,.starburst,.orbit-ring,.orbit-tag>span,.rings,.float-card,.graph-lines .dot,.constellation .ring,.typing i,.screen.scroll img,.demo-cursor .cur,.demo-cursor svg,.demo-cursor i,.fx-slash i,.fx-embers i,.graph-hub){animation-play-state:paused}
+.js .scene:not(.is-live) :is(.marquee-track,.starburst,.orbit-ring,.orbit-tag>span,.rings,.float-card,.graph-lines .dot,.constellation .ring,.typing i,.screen.scroll img,.steps.is-working .step,.steps.is-working .step-bar span,.demo-cursor .cur,.demo-cursor svg,.demo-cursor i,.fx-slash i,.fx-embers i,.graph-hub){animation-play-state:paused}
 .js .scene:not(.is-live) .pulse::after{animation-play-state:paused}
 
 /* Hover and theme details */
@@ -484,11 +484,7 @@ html.theme-anim .theme svg{animation:icon-in .55s var(--ease-out)}
 .cur{position:absolute;left:0;top:0;width:clamp(14px,2.2cqw,24px);aspect-ratio:1;animation:11s var(--ease-in-out) infinite}
 .cur svg{position:absolute;left:-16%;top:-10%;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));transform-origin:16% 10%;animation:11s linear infinite}
 .cur i{position:absolute;left:-14px;top:-14px;width:28px;height:28px;border:2px solid var(--orange);border-radius:50%;opacity:0;animation:11s linear infinite}
-.cursor-sd .cur{animation-name:cur-sd}.cursor-sd svg{animation-name:press-sd}.cursor-sd i{animation-name:ring-sd}
 .cursor-sf .cur{animation-name:cur-sf;animation-duration:10s}.cursor-sf svg{animation-name:press-sf;animation-duration:10s}.cursor-sf i{animation-name:ring-sf;animation-duration:10s}
-@keyframes cur-sd{0%{translate:55cqw 72cqh}14%,22%{translate:65cqw 32cqh}34%,42%{translate:58cqw 58cqh}56%,64%{translate:88cqw 4cqh}78%,86%{translate:6cqw 35cqh}100%{translate:55cqw 72cqh}}
-@keyframes press-sd{0%,16.5%,19.5%,36.5%,39.5%,58.5%,61.5%,80.5%,83.5%,100%{scale:1}18%,38%,60%,82%{scale:.78}}
-@keyframes ring-sd{0%,17.9%,26.1%,37.9%,46.1%,59.9%,68.1%,81.9%,90.1%,100%{opacity:0;scale:.3}18%,38%,60%,82%{opacity:1;scale:.3}26%,46%,68%,90%{opacity:0;scale:1.8}}
 @keyframes cur-sf{0%{translate:52cqw 84cqh}14%,26%{translate:19cqw 63cqh}38%,50%{translate:69cqw 67cqh}62%,76%{translate:85cqw 4cqh}100%{translate:52cqw 84cqh}}
 @keyframes press-sf{0%,18.5%,21.5%,42.5%,45.5%,67.5%,70.5%,100%{scale:1}20%,44%,69%{scale:.78}}
 @keyframes ring-sf{0%,19.9%,28.1%,43.9%,52.1%,68.9%,77.1%,100%{opacity:0;scale:.3}20%,44%,69%{opacity:1;scale:.3}28%,52%,77%{opacity:0;scale:1.8}}
@@ -539,6 +535,33 @@ html .tiltable.is-tilting{transform:perspective(900px) rotateX(var(--trx,0deg)) 
  html .tiltable.is-tilting{transform:none}
  .magnetic{translate:none}
 }
+
+/* ==========================================================================
+   Live projects: real screen recordings play inside the product frames while they are on screen.
+   ========================================================================== */
+.screen video{display:block;width:100%;height:100%;object-fit:cover;object-position:top;background:#0b0c0e}
+.vid-toggle{position:absolute;top:6px;right:10px;z-index:4;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px 0 8px;border-radius:999px;background:rgba(243,239,228,.08);color:#d9d6cd;border:1px solid rgba(243,239,228,.14);font:500 .62rem var(--mono);letter-spacing:.08em;text-transform:uppercase;transition:background .2s,color .2s,border-color .2s,scale .2s var(--ease-out)}
+.vid-toggle::after{content:'';position:absolute;inset:-9px -4px}
+.vid-toggle:hover{background:rgba(243,239,228,.16);color:#fff}.vid-toggle:active{scale:.94}
+.vid-toggle:focus-visible{outline:2px solid var(--orange);outline-offset:3px}
+.vid-toggle svg{width:10px;height:10px;flex:none}.vid-toggle .i-pause,.vid-toggle .t-pause{display:none}
+.device.is-playing .vid-toggle .i-pause,.device.is-playing .vid-toggle .t-pause{display:inline}.device.is-playing .vid-toggle .i-play,.device.is-playing .vid-toggle .t-play{display:none}
+.device.is-playing .vid-toggle{border-color:rgba(255,106,61,.5)}
+.device.is-playing .vid-toggle .i-pause{color:var(--orange)}
+.device-bar span{margin-right:96px}
+/* Chapter thumbnails show how far the recording has got through the current part. */
+.chapters .shot-thumb::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:calc(var(--p,0) * 100%);background:var(--orange);transition:width .3s linear}
+.chapters .shot-thumb[aria-pressed=false]::after{width:0;transition:none}
+
+/* Learnspace: the illustrated flow runs on its own, one step after another. */
+.steps.is-working .step{animation:step-turn 8s var(--ease-in-out) infinite;animation-delay:calc(var(--k,0) * 2s)}
+.steps.is-working .step-bar span{animation:bar-turn 8s var(--ease-out) infinite;animation-delay:calc(var(--k,0) * 2s)}
+.steps.is-working .step-num{animation:num-turn 8s var(--ease-out) infinite;animation-delay:calc(var(--k,0) * 2s)}
+@keyframes step-turn{0%,25%,100%{translate:0 0;box-shadow:0 0 0 0 transparent}4%,21%{translate:0 -8px;box-shadow:0 0 0 2px var(--orange),0 28px 40px -26px rgba(0,0,0,.6)}}
+@keyframes bar-turn{0%{transform:scaleX(.03)}20%,100%{transform:scaleX(1)}}
+@keyframes num-turn{0%,25%,100%{scale:1}6%{scale:1.18}12%{scale:1}}
+
+@media(prefers-reduced-motion:reduce){.vid-toggle{transition:none}}
 
 /* ==========================================================================
    Responsive
