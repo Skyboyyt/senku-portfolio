@@ -1,4 +1,4 @@
-# Fahad Sani — Portfolio
+# Senku — Portfolio
 
 A complete, dependency-free portfolio built with semantic HTML, CSS, and JavaScript. Its "Ideas in motion" design is a set of full-width scenes with 3D product frames and scroll-driven motion, taken from the owner's motion edit (October 2026).
 
@@ -33,7 +33,7 @@ Links from the demos back to the portfolio point at https://senku-portfolio.verc
 - **Owner-approved motifs:** the rotating starburst (hero and contact) and the scrolling slogan strips. AGENTS.md records this.
 
 ## Your portrait
-The About scene shows your avatar, `assets/avatar.jpg`, in a circle with Apps, Games and Web orbiting it. To change it, replace that file. The image is 361×361, so a larger version (at least 900px wide) will look sharper on high-resolution screens. An FS monogram shows if the image cannot load.
+The About scene shows your avatar, `assets/avatar.jpg`, in a circle with Apps, Games and Web orbiting it. To change it, replace that file. The image is 361×361, so a larger version (at least 900px wide) will look sharper on high-resolution screens. An S monogram shows if the image cannot load.
 
 Your original photo is still kept at `assets/ChatGPT Image 30 Sept 2026, 22_24_36.jpg` but is not shown on the page.
 
@@ -100,6 +100,6 @@ Each project has a native details/summary section. Click the label, or focus it 
 
 ## Services, sharing and 404
 - **Services** ("What I can help with") lists four kinds of work, each linked to a real project as proof. Keep every card tied to work that exists.
-- **Link previews:** Open Graph and Twitter tags give a title, description and a large preview image when the site is shared on WhatsApp, X, LinkedIn or elsewhere. The image is `assets/share-card-v2.jpg` (1200×630, under 100 KB so WhatsApp shows it). The tags use the full address https://senku-portfolio.vercel.app/, so update them, and the canonical link, if the site moves to a new domain. After changing the image, give it a new file name, because WhatsApp and X cache previews.
-- **Structured data:** a schema.org `Person` block helps search engines connect the names Fahad Sani, Senku and Skyboy.
+- **Link previews:** Open Graph and Twitter tags give a title, description and a large preview image when the site is shared on WhatsApp, X, LinkedIn or elsewhere. The image is `assets/share-card-v3.jpg` (1200×630, under 100 KB so WhatsApp shows it). The tags use the full address https://senku-portfolio.vercel.app/, so update them, and the canonical link, if the site moves to a new domain. After changing the image, give it a new file name, because WhatsApp and X cache previews.
+- **Structured data:** a schema.org `Person` block helps search engines connect the names Senku and Skyboy.
 - **404.html** is a styled "page not found" screen in the same design. Vercel and most static hosts serve it automatically.

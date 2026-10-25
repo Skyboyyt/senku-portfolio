@@ -65,7 +65,7 @@ function setAccent(name){
  accentRadios.forEach(r=>{r.checked=r.value===name});
  if(accentToggle){accentToggle.setAttribute('aria-label','Change accent color (current: '+ACCENTS[name]+')');accentToggle.title='Accent color: '+ACCENTS[name]}
  const c=getComputedStyle(root).getPropertyValue('--accent').trim();
- if(favicon&&/^#[0-9a-f]{6}$/i.test(c))favicon.href=favicon.href.replace(/fill='%23[0-9a-f]{6}'%3EFS/i,"fill='%23"+c.slice(1)+"'%3EFS");
+ if(favicon&&/^#[0-9a-f]{6}$/i.test(c))favicon.href=favicon.href.replace(/fill='%23[0-9a-f]{6}'%3ES%3C/i,"fill='%23"+c.slice(1)+"'%3ES%3C");
 }
 setAccent(root.dataset.accent);
 accentRadios.forEach(r=>r.addEventListener('change',()=>{if(!r.checked)return;try{localStorage.setItem('fahad-accent',r.value)}catch(e){}spread(r.closest('.swatch'),()=>setAccent(r.value),560)}));
