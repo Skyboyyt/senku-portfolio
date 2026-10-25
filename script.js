@@ -67,7 +67,9 @@ if('IntersectionObserver' in window&&!reduced.matches){
  const parts=[],mark=(el,kind)=>{if(!el||el.dataset.r)return;el.dataset.r=kind;parts.push(el)};
  document.querySelectorAll('.scene:not(.hero) [data-split]').forEach(el=>mark(el,'title'));
  document.querySelectorAll('.stage').forEach(el=>mark(el,'stage'));
- document.querySelectorAll('.callouts li,.step,.service,.craft-cards li,.contact-links a,.graph-nodes li,.graph-hub').forEach(el=>mark(el,'flip'));
+ document.querySelectorAll('.step').forEach(el=>mark(el,'drop'));
+ document.querySelectorAll('.float-shot').forEach(el=>mark(el,'fly'));
+ document.querySelectorAll('.callouts li,.service,.craft-cards li,.contact-links a,.graph-nodes li,.graph-hub').forEach(el=>mark(el,'flip'));
  document.querySelectorAll('.skill-list li').forEach(el=>mark(el,'chip'));
  document.querySelectorAll('.constellation').forEach(el=>mark(el,'draw'));
  document.querySelectorAll('.scene:not(.hero) .label,.reveal,.shot-thumbs,.skill-group>div:first-child,.float-shot,.builds-card,.facts,.project-story,.note,.scene:not(.hero) .marquee').forEach(el=>mark(el,'up'));
@@ -90,14 +92,72 @@ document.querySelectorAll('[data-tilt]').forEach(stage=>follow(stage.closest('.s
 document.querySelectorAll('[data-parallax]').forEach(field=>follow(field.closest('.scene')||field,field,'--px','--py'));
 const hero=document.querySelector('.hero');if(hero)follow(hero,hero,'--hx','--hy');
 
-// Stack graph: lines from the hub to each technology, with signals travelling along them.
+// Stack graph: lines from the hub to each technology, with signals travelling along them. Once the nodes have
+// arrived they drift gently and their lines follow.
 document.querySelectorAll('[data-graph]').forEach(graph=>{
- const svg=graph.querySelector('.graph-lines'),hub=graph.querySelector('.graph-hub'),nodes=[...graph.querySelectorAll('.graph-nodes li')],ns='http://www.w3.org/2000/svg';
- const draw=()=>{const w=graph.clientWidth,h=graph.clientHeight;if(!w||!h)return;svg.setAttribute('viewBox','0 0 '+w+' '+h);svg.textContent='';const hx=hub.offsetLeft,hy=hub.offsetTop;
+ const svg=graph.querySelector('.graph-lines'),hub=graph.querySelector('.graph-hub'),nodes=[...graph.querySelectorAll('.graph-nodes li')],ns='http://www.w3.org/2000/svg';let ends=[];
+ const draw=()=>{const w=graph.clientWidth,h=graph.clientHeight;if(!w||!h)return;svg.setAttribute('viewBox','0 0 '+w+' '+h);svg.textContent='';ends=[];const hx=hub.offsetLeft,hy=hub.offsetTop;
   nodes.forEach((node,i)=>{const x=node.offsetLeft,y=node.offsetTop,len=Math.hypot(x-hx,y-hy),line=document.createElementNS(ns,'line');
-   [['x1',hx],['y1',hy],['x2',x],['y2',y]].forEach(([k,v])=>line.setAttribute(k,v.toFixed(1)));const dot=line.cloneNode();line.setAttribute('class','link');dot.setAttribute('class','dot');dot.style.setProperty('--len',len.toFixed(1));dot.style.setProperty('--delay',(-i*.57).toFixed(2)+'s');svg.append(line,dot)})};
+   [['x1',hx],['y1',hy],['x2',x],['y2',y]].forEach(([k,v])=>line.setAttribute(k,v.toFixed(1)));const dot=line.cloneNode();line.setAttribute('class','link');dot.setAttribute('class','dot');dot.style.setProperty('--len',len.toFixed(1));dot.style.setProperty('--delay',(-i*.57).toFixed(2)+'s');svg.append(line,dot);ends.push({x,y,line,dot})})};
  draw();if('ResizeObserver' in window)new ResizeObserver(draw).observe(graph);else addEventListener('resize',draw);
+ if(reduced.matches||!('IntersectionObserver' in window))return;
+ let raf=0,t0=null;
+ const tick=now=>{
+  if(nodes.some(n=>n.classList.contains('r-hide')||n.classList.contains('r-in'))){t0=null;raf=requestAnimationFrame(tick);return}
+  if(t0===null)t0=now;const ramp=Math.min(1,(now-t0)/1500);
+  nodes.forEach((n,i)=>{const dx=Math.sin(now/1700+i*1.9)*7*ramp,dy=Math.cos(now/2100+i*1.3)*6*ramp,e=ends[i];n.style.setProperty('--dx',dx.toFixed(2)+'px');n.style.setProperty('--dy',dy.toFixed(2)+'px');
+   if(e){const x=(e.x+dx).toFixed(1),y=(e.y+dy).toFixed(1);e.line.setAttribute('x2',x);e.line.setAttribute('y2',y);e.dot.setAttribute('x2',x);e.dot.setAttribute('y2',y)}});
+  raf=requestAnimationFrame(tick)};
+ new IntersectionObserver(([e])=>{if(e.isIntersecting&&!raf&&!reduced.matches)raf=requestAnimationFrame(tick);else if(!e.isIntersecting&&raf){cancelAnimationFrame(raf);raf=0}}).observe(graph);
 });
+
+// Live screens: once a long screenshot has loaded, measure how far it can scroll inside its screen.
+document.querySelectorAll('.screen.scroll').forEach((screen,i)=>{
+ const img=screen.querySelector('img');screen.style.setProperty('--dur',(19+i*3)+'s');screen.style.setProperty('--delay',(-i*2.5)+'s');
+ const measure=()=>{const travel=img.offsetHeight-screen.clientHeight;if(travel>0){screen.style.setProperty('--travel',travel+'px');screen.classList.add('ready')}};
+ if(img.complete&&img.naturalWidth)measure();else img.addEventListener('load',measure,{once:true});
+ if('ResizeObserver' in window)new ResizeObserver(measure).observe(screen);
+});
+
+// Scene seams: where a dark scene meets a cream one, build a band of tiles in the outgoing colour.
+const seamsOK=!reduced.matches&&window.CSS&&CSS.supports('animation-timeline: view()');
+function buildSeams(){if(!seamsOK)return;document.querySelectorAll('.seam').forEach(s=>s.remove());
+ const tile=Math.min(120,Math.max(56,innerWidth*.08)),cols=Math.ceil(innerWidth/tile)+1;
+ const list=[...document.querySelectorAll('.scene')];
+ list.forEach((scene,i)=>{if(!i)return;const tone=s=>s.classList.contains('paper')?'paper':'ink',prev=tone(list[i-1]);if(prev===tone(scene))return;
+  const seam=document.createElement('div');seam.className='seam from-'+prev;seam.setAttribute('aria-hidden','true');seam.style.setProperty('--cols',cols);
+  for(let r=0;r<2;r++)for(let c=0;c<cols;c++){const t=document.createElement('i');t.style.setProperty('--k',c+r*2);if((c*7+r*5)%11===4)t.className='hot';seam.appendChild(t)}
+  scene.prepend(seam)})}
+buildSeams();let seamW=innerWidth,seamTimer;addEventListener('resize',()=>{clearTimeout(seamTimer);seamTimer=setTimeout(()=>{if(innerWidth!==seamW){seamW=innerWidth;buildSeams()}},200)});
+
+// Mono labels decode from random characters as they arrive, like the intro. Screen readers get the plain text.
+const glyphs='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/#%&*<>';
+function decode(el,text,dur){const start=performance.now();el._decode=start;const step=now=>{if(el._decode!==start)return;const p=Math.min(1,(now-start)/dur),shown=Math.floor(p*text.length);el.textContent=text.slice(0,shown)+[...text.slice(shown)].map(c=>c===' '?' ':glyphs[Math.random()*glyphs.length|0]).join('');if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
+if(!reduced.matches&&'IntersectionObserver' in window){
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting)return;io.unobserve(e.target);const vis=e.target.querySelector('[aria-hidden]');decode(vis,vis.dataset.text,700)}),{threshold:.6});
+ document.querySelectorAll('.scene .label').forEach(el=>{const text=el.textContent.replace(/\s+/g,' ').trim(),sr=document.createElement('span'),vis=document.createElement('span');sr.className='sr-only';sr.textContent=text;vis.setAttribute('aria-hidden','true');vis.dataset.text=text;vis.textContent=text;el.textContent='';el.append(sr,vis);io.observe(el)});
+}
+
+// Slogan strips speed up with scroll speed and lean in the direction you scroll.
+if(!reduced.matches){const strips=[...document.querySelectorAll('.marquee')];let lastY=scrollY,vel=0,s=0,run=false;
+ const apply=v=>strips.forEach(m=>{m.style.setProperty('--skew',(v*-1.2).toFixed(2)+'deg');m.querySelector('.marquee-track').getAnimations().forEach(a=>{a.playbackRate=1+Math.abs(v)})});
+ const step=()=>{s+=(Math.max(-6,Math.min(6,vel*.08))-s)*.12;vel*=.85;if(Math.abs(s)>.01||Math.abs(vel)>.5){apply(s);requestAnimationFrame(step)}else{s=0;apply(0);run=false}};
+ addEventListener('scroll',()=>{vel+=scrollY-lastY;lastY=scrollY;if(!run){run=true;requestAnimationFrame(step)}},{passive:true})}
+
+// Cards tilt toward the mouse with a soft highlight; buttons lean slightly toward it. Mouse and pen only.
+if(fine.matches&&!reduced.matches){
+ document.querySelectorAll('.service,.step,.craft-cards li,.contact-links a').forEach(el=>{el.classList.add('tiltable');
+  el.addEventListener('pointermove',e=>{if(e.pointerType==='touch'||el.classList.contains('r-hide'))return;const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+   el.style.setProperty('--try',((x-.5)*10).toFixed(2)+'deg');el.style.setProperty('--trx',((.5-y)*10).toFixed(2)+'deg');el.style.setProperty('--gx',(x*100).toFixed(1)+'%');el.style.setProperty('--gy',(y*100).toFixed(1)+'%');el.classList.add('is-tilting')});
+  el.addEventListener('pointerleave',()=>el.classList.remove('is-tilting'))});
+ document.querySelectorAll('.button,.icon,.announce,.cta-bar').forEach(el=>{el.classList.add('magnetic');
+  el.addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;const r=el.getBoundingClientRect();el.style.setProperty('--mgx',((e.clientX-r.left)/r.width*2-1).toFixed(3));el.style.setProperty('--mgy',((e.clientY-r.top)/r.height*2-1).toFixed(3))});
+  el.addEventListener('pointerleave',()=>{el.style.setProperty('--mgx',0);el.style.setProperty('--mgy',0)})});
+}
+
+// Embers for the Battle of Shinkai scene.
+const embers=document.querySelector('.fx-embers');
+if(embers&&!reduced.matches)for(let i=0;i<18;i++){const e=document.createElement('i');e.style.setProperty('--x',(i*53%97)+'%');e.style.setProperty('--s',(3+i*7%5)+'px');e.style.setProperty('--d',(7+i*13%6)+'s');e.style.setProperty('--delay',(-(i*1.7%9)).toFixed(1)+'s');e.style.setProperty('--dx',((i*31%9)-4)*10+'px');embers.appendChild(e)}
 
 // Looping motion only runs in scenes near the viewport.
 const scenes=[...document.querySelectorAll('.scene')];
@@ -107,7 +167,7 @@ if('IntersectionObserver' in window){const live=new IntersectionObserver(es=>es.
 const bar=document.querySelector('.progress'),count=document.querySelector('.hud-count'),name=document.querySelector('.hud-name'),links=[...document.querySelectorAll('.desktop-nav a')],total=String(scenes.length).padStart(2,'0');let ticking=false,last=-1;
 function onScroll(){ticking=false;const max=document.documentElement.scrollHeight-innerHeight;bar.style.setProperty('--progress',max>0?Math.min(1,scrollY/max):0);
  let idx=0;scenes.forEach((s,i)=>{if(s.getBoundingClientRect().top<innerHeight*.5)idx=i});
- if(idx!==last){last=idx;count.textContent=String(idx+1).padStart(2,'0')+' / '+total;name.textContent=scenes[idx].dataset.scene||''}
+ if(idx!==last){last=idx;count.textContent=String(idx+1).padStart(2,'0')+' / '+total;const label=scenes[idx].dataset.scene||'';if(reduced.matches||last===0&&!name.textContent)name.textContent=label;else decode(name,label,450)}
  let current=null,best=-Infinity;links.forEach(a=>{const s=document.querySelector(a.getAttribute('href'));if(!s)return;const top=s.getBoundingClientRect().top;if(top<innerHeight*.4&&top>best){best=top;current=a}});
  links.forEach(a=>{const on=a===current;a.classList.toggle('active',on);on?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current')})}
 addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});addEventListener('resize',onScroll);onScroll();
