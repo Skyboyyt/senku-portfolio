@@ -10,6 +10,7 @@ To host elsewhere, upload the contents of this folder and preserve the folder st
 ## Files
 - index.html: content, semantic page structure, and metadata. Each part of the page is a `<section class="scene">`.
 - styles.css: design tokens, scene palettes, layouts, 3D stages, motion, and the reduced-motion rules.
+- gl.js: the 3D tile scenes behind the hero and contact sections (hand-written WebGL2, no library).
 - script.js: theme initialization and switching, accessible menu, heading letter-splitting, scroll reveals, pointer tilt, stack graph, scene counter, galleries, game player, copy email, easter egg, and the intro.
 - assets/fonts/: Inter Tight (variable) and JetBrains Mono, self-hosted from Fontsource under the SIL Open Font License 1.1.
 - assets/: avatar and real project screenshots.
@@ -57,6 +58,14 @@ The recordings were made with Playwright: a scripted session in a real browser, 
 - The project is the first project scene and is announced by the "New" pill in the hero.
 - "Play Battle of Shinkai" links to https://skyboyyt.github.io/battle-of-shinkai/. On desktop (wide screen, mouse), it opens the game in an in-page player dialog; the iframe is created on open and removed on close, so the game and its audio stop. Phones, tablets, and visitors without JavaScript go straight to the full game tab.
 - The player has an "Open full tab" link, which is recommended for wallet sign-in.
+
+## 3D
+- **Tile floor (gl.js):** behind the hero and contact scenes, a floor of 3D tiles drawn with WebGL2. It ripples under the mouse and warms to orange there, and tiles flip over to reveal orange, cream and lime. Flips only happen where they won't land behind text: each tile is projected to the screen and tested against the actual lines of text and the buttons, re-measured after the fonts load. In the hero the floor rises in after the intro and crumbles away as you scroll down; at the contact scene it assembles as you arrive. The asterisk is a real 3D starburst, sized and placed from the SVG starburst (kept in the page as the fallback), spinning and leaning toward the mouse. A fade behind the text keeps it readable. Both scenes pause when off screen or when the tab is hidden; colours follow the theme. Without WebGL2 the flat design shows; with reduced motion a single still frame is drawn.
+- **Services carousel:** on screens at least 960px wide and 620px tall, the section pins and its four cards turn on a 3D cylinder as you scroll through it, with numbered progress below. A card whose link gets keyboard focus turns to the front. Smaller screens and reduced motion get the normal grid.
+- **Ring text:** in The full stack, the slogan becomes a ring of letters spinning in 3D, bright at the front and faint at the back; it speeds up with scroll speed.
+- **Real builds:** the screenshots sit at different depths and the whole field orbits as you scroll past.
+- **Titles and words:** letters in the hero and contact titles lift toward the mouse; project titles scatter upward as they leave the screen; key paragraphs light up word by word as you read down.
+- **Cursor:** with a mouse, a ring follows the pointer, grows over links and turns into an orange label over project screens (Play/Pause) and screenshots (Open). Clicking a project screen pauses or plays its recording.
 
 ## Motion
 One set of easing curves (`--ease-out`, `--ease-in`, `--ease-in-out`, `--ease-soft`, `--ease-back`) is used throughout.

@@ -19,7 +19,7 @@ document.querySelectorAll('[data-split]').forEach(el=>{
   node.textContent.split(/(\s+)/).forEach(part=>{
    if(!part)return;if(/^\s+$/.test(part)){vis.appendChild(document.createTextNode(' '));return}
    const word=document.createElement('span');word.className='w';
-   [...part].forEach(c=>{const ch=document.createElement('span');ch.className='ch';ch.textContent=c;ch.style.setProperty('--i',i);ch.style.setProperty('--r',((i*37)%13-6)+'deg');i++;word.appendChild(ch)});
+   [...part].forEach(c=>{const ch=document.createElement('span');ch.className='ch';ch.textContent=c;ch.style.setProperty('--i',i);ch.style.setProperty('--r',((i*37)%13-6)+'deg');ch.style.setProperty('--u',(i*53)%11);i++;word.appendChild(ch)});
    vis.appendChild(word);
   });
  });
@@ -61,6 +61,44 @@ document.getElementById('year').textContent=new Date().getFullYear();
 // Slogan strips: repeat the text until one half of the track is wider than the screen, so the loop never gaps.
 document.querySelectorAll('.marquee-track').forEach(track=>{let n=0;while(track.scrollWidth/2<innerWidth*1.15&&n++<4)track.append(...[...track.children].map(c=>c.cloneNode(true)))});
 
+// ---- 3D layer ----
+const clamp01=v=>Math.min(1,Math.max(0,v)),has3d=window.CSS&&CSS.supports('transform-style','preserve-3d');
+// Services: on wide screens the section pins and its cards turn on a 3D cylinder as you scroll through it.
+const services=document.querySelector('.services'),sGrid=services&&services.querySelector('.service-grid');
+if(services&&sGrid&&has3d&&!reduced.matches){
+ const wide=matchMedia('(min-width:960px) and (min-height:620px)'),cards=[...sGrid.children],STEP=48;
+ const stage=document.createElement('div');stage.className='ring-stage';sGrid.before(stage);stage.appendChild(sGrid);
+ const dots=document.createElement('div');dots.className='ring-progress';dots.setAttribute('aria-hidden','true');dots.innerHTML=cards.map((c,i)=>'<i>'+String(i+1).padStart(2,'0')+'</i>').join('');stage.after(dots);
+ let on=false,raf=0;
+ const range=()=>{const r=services.getBoundingClientRect();return{r,len:Math.max(1,r.height-innerHeight)}};
+ const update=()=>{raf=0;if(!on)return;const{r,len}=range(),p=clamp01(-r.top/len),spin=-p*(cards.length-1)*STEP,front=Math.round(p*(cards.length-1));
+  sGrid.style.setProperty('--spin',spin.toFixed(2)+'deg');
+  cards.forEach((c,i)=>{const a=i*STEP+spin;c.style.setProperty('--o',Math.max(.06,1-Math.abs(a)/100).toFixed(3));c.classList.toggle('is-front',i===front)});
+  [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===front))};
+ const req=()=>{if(!raf)raf=requestAnimationFrame(update)};
+ const size=()=>{const cw=Math.round(Math.min(380,Math.max(300,stage.clientWidth*.3)));sGrid.style.setProperty('--cw',cw+'px');sGrid.style.setProperty('--step',STEP+'deg');sGrid.style.setProperty('--r',Math.round(cw/2/Math.tan(STEP/2*Math.PI/180)+40)+'px')};
+ const set=()=>{on=wide.matches;services.classList.toggle('is-3d',on);cards.forEach((c,i)=>c.style.setProperty('--k',i));if(on){size();update()}else{sGrid.style.removeProperty('--spin');cards.forEach(c=>{c.style.removeProperty('--o');c.classList.remove('is-front')})}};
+ set();wide.addEventListener('change',set);addEventListener('resize',()=>{if(on){size();req()}});addEventListener('scroll',req,{passive:true});
+ // A card's link receiving keyboard focus turns that card to the front.
+ cards.forEach((c,i)=>c.addEventListener('focusin',()=>{if(!on)return;const{r,len}=range(),top=Math.round(scrollY+r.top+len*(i/(cards.length-1)));if(Math.abs(scrollY-top)>4)scrollTo({top,behavior:'instant'})}));
+ stage.addEventListener('pointermove',e=>{if(!on||e.pointerType==='touch')return;const b=stage.getBoundingClientRect();stage.style.setProperty('--tx',((e.clientX-b.left)/b.width-.5).toFixed(3));stage.style.setProperty('--ty',((e.clientY-b.top)/b.height-.5).toFixed(3))});
+ stage.addEventListener('pointerleave',()=>{stage.style.setProperty('--tx',0);stage.style.setProperty('--ty',0)});
+}
+// The full stack: the slogan strip becomes a ring of letters spinning in 3D.
+const stackStrip=document.querySelector('#skills .marquee');
+if(stackStrip&&has3d&&!reduced.matches){
+ const text='INTERFACE / API / DATABASE / DEPLOY / ',chars=[...(text+text)],ring=document.createElement('div'),spin=document.createElement('div');
+ ring.className='ring3d';ring.setAttribute('aria-hidden','true');ring.style.setProperty('--n',chars.length);spin.className='ring3d-spin';
+ chars.forEach((c,i)=>['out','in'].forEach(side=>{const s=document.createElement('span');s.className='rc '+side;s.textContent=c;s.style.setProperty('--i',i);spin.appendChild(s)}));
+ ring.appendChild(spin);stackStrip.replaceWith(ring);
+}
+// Paragraphs light up word by word as you read down the page (scroll-driven browsers).
+if(!reduced.matches&&window.CSS&&CSS.supports('animation-timeline: view()'))document.querySelectorAll('.large-copy,.tagline,.subhead,.contact-intro,.builds-note').forEach(el=>{
+ const words=[],walk=node=>[...node.childNodes].forEach(n=>{if(n.nodeType===3){const frag=document.createDocumentFragment();n.textContent.split(/(\s+)/).forEach(pt=>{if(!pt)return;if(/^\s+$/.test(pt))frag.append(pt);else{const w=document.createElement('span');w.className='wd';w.textContent=pt;words.push(w);frag.append(w)}});n.replaceWith(frag)}else if(n.nodeType===1&&!n.classList.contains('sr-only'))walk(n)});
+ walk(el);el.classList.add('scrub');
+ words.forEach((w,i)=>{const a=6+i/words.length*34;w.style.setProperty('--wr','cover '+a.toFixed(1)+'% cover '+(a+12).toFixed(1)+'%')});
+});
+
 // Scroll reveals. Parts below the fold at load start hidden and ease in as they reach the viewport; parts that
 // arrive together are staggered. When a part has arrived its reveal classes are removed, leaving the base styles.
 if('IntersectionObserver' in window&&!reduced.matches){
@@ -68,11 +106,10 @@ if('IntersectionObserver' in window&&!reduced.matches){
  document.querySelectorAll('.scene:not(.hero) [data-split]').forEach(el=>mark(el,'title'));
  document.querySelectorAll('.stage').forEach(el=>mark(el,'stage'));
  document.querySelectorAll('.step').forEach(el=>mark(el,'drop'));
- document.querySelectorAll('.float-shot').forEach(el=>mark(el,'fly'));
- document.querySelectorAll('.callouts li,.service,.craft-cards li,.contact-links a,.graph-nodes li,.graph-hub').forEach(el=>mark(el,'flip'));
+ document.querySelectorAll('.callouts li,.service,.craft-cards li,.contact-links a,.graph-nodes li,.graph-hub').forEach(el=>{if(!el.closest('.is-3d'))mark(el,'flip')});
  document.querySelectorAll('.skill-list li').forEach(el=>mark(el,'chip'));
  document.querySelectorAll('.constellation').forEach(el=>mark(el,'draw'));
- document.querySelectorAll('.scene:not(.hero) .label,.reveal,.shot-thumbs,.skill-group>div:first-child,.float-shot,.builds-card,.facts,.project-story,.note,.scene:not(.hero) .marquee').forEach(el=>mark(el,'up'));
+ document.querySelectorAll('.scene:not(.hero) .label,.reveal,.shot-thumbs,.skill-group>div:first-child,.builds-card,.facts,.project-story,.note,.scene:not(.hero) .marquee').forEach(el=>mark(el,'up'));
  parts.forEach(el=>{if(el.getBoundingClientRect().top>innerHeight)el.classList.add('r-hide')});
  const settle=el=>{el.classList.remove('r-hide','r-in');el.style.removeProperty('--d')};
  const io=new IntersectionObserver(entries=>{entries.filter(e=>e.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top||a.boundingClientRect.left-b.boundingClientRect.left).forEach((e,i)=>{
@@ -140,13 +177,13 @@ if(!reduced.matches&&'IntersectionObserver' in window){
 
 // Slogan strips speed up with scroll speed and lean in the direction you scroll.
 if(!reduced.matches){const strips=[...document.querySelectorAll('.marquee')];let lastY=scrollY,vel=0,s=0,run=false;
- const apply=v=>strips.forEach(m=>{m.style.setProperty('--skew',(v*-1.2).toFixed(2)+'deg');m.querySelector('.marquee-track').getAnimations().forEach(a=>{a.playbackRate=1+Math.abs(v)})});
+ const apply=v=>{strips.forEach(m=>{if(!m.isConnected)return;m.style.setProperty('--skew',(v*-1.2).toFixed(2)+'deg');m.querySelector('.marquee-track').getAnimations().forEach(a=>{a.playbackRate=1+Math.abs(v)})});document.querySelectorAll('.ring3d-spin').forEach(r=>r.getAnimations().forEach(a=>{a.playbackRate=1+Math.abs(v)*1.6}))};
  const step=()=>{s+=(Math.max(-6,Math.min(6,vel*.08))-s)*.12;vel*=.85;if(Math.abs(s)>.01||Math.abs(vel)>.5){apply(s);requestAnimationFrame(step)}else{s=0;apply(0);run=false}};
  addEventListener('scroll',()=>{vel+=scrollY-lastY;lastY=scrollY;if(!run){run=true;requestAnimationFrame(step)}},{passive:true})}
 
 // Cards tilt toward the mouse with a soft highlight; buttons lean slightly toward it. Mouse and pen only.
 if(fine.matches&&!reduced.matches){
- document.querySelectorAll('.service,.step,.craft-cards li,.contact-links a').forEach(el=>{el.classList.add('tiltable');
+ document.querySelectorAll('.service,.step,.craft-cards li,.contact-links a').forEach(el=>{if(el.closest('.is-3d'))return;el.classList.add('tiltable');
   el.addEventListener('pointermove',e=>{if(e.pointerType==='touch'||el.classList.contains('r-hide'))return;const r=el.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
    el.style.setProperty('--try',((x-.5)*10).toFixed(2)+'deg');el.style.setProperty('--trx',((.5-y)*10).toFixed(2)+'deg');el.style.setProperty('--gx',(x*100).toFixed(1)+'%');el.style.setProperty('--gy',(y*100).toFixed(1)+'%');el.classList.add('is-tilting')});
   el.addEventListener('pointerleave',()=>el.classList.remove('is-tilting'))});
@@ -171,6 +208,29 @@ function onScroll(){ticking=false;const max=document.documentElement.scrollHeigh
  let current=null,best=-Infinity;links.forEach(a=>{const s=document.querySelector(a.getAttribute('href'));if(!s)return;const top=s.getBoundingClientRect().top;if(top<innerHeight*.4&&top>best){best=top;current=a}});
  links.forEach(a=>{const on=a===current;a.classList.toggle('active',on);on?a.setAttribute('aria-current','location'):a.removeAttribute('aria-current')})}
 addEventListener('scroll',()=>{if(!ticking){ticking=true;requestAnimationFrame(onScroll)}},{passive:true});addEventListener('resize',onScroll);onScroll();
+
+// Mouse only: letters in the big titles lift toward the cursor, and a ring follows the pointer, growing over
+// links and turning into a label over the project screens and screenshots.
+if(fine.matches&&!reduced.matches){
+ document.querySelectorAll('.hero-title,#contact-title').forEach(title=>{
+  const chars=[...title.querySelectorAll('.ch')],area=title.closest('.scene');let raf=0,mx=0,my=0,active=false;
+  const run=()=>{raf=0;chars.forEach(ch=>{const r=ch.getBoundingClientRect(),dx=mx-(r.left+r.width/2),dy=my-(r.top+r.height/2),f=active?Math.max(0,1-Math.hypot(dx,dy)/260):0;ch.style.setProperty('--f',(f*f).toFixed(3));ch.style.setProperty('--dir',dx>0?-1:1)})};
+  area.addEventListener('pointermove',e=>{if(e.pointerType==='touch')return;mx=e.clientX;my=e.clientY;active=true;if(!raf)raf=requestAnimationFrame(run)});
+  area.addEventListener('pointerleave',()=>{active=false;if(!raf)raf=requestAnimationFrame(run)});
+ });
+ document.querySelectorAll('.float-shot').forEach(a=>a.dataset.cursor='Open');
+ document.querySelectorAll('.cta-bar').forEach(a=>a.dataset.cursor='Say hi');
+ const cur=document.createElement('div');cur.className='cursor';cur.setAttribute('aria-hidden','true');cur.innerHTML='<span class="cursor-label"></span>';document.body.appendChild(cur);
+ const lab=cur.firstChild;let x=-200,y=-200,cx=-200,cy=-200,raf=0,shown=false,last=null;
+ const tick=()=>{cx+=(x-cx)*.24;cy+=(y-cy)*.24;cur.style.transform='translate3d('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px,0)';raf=Math.abs(x-cx)+Math.abs(y-cy)>.4?requestAnimationFrame(tick):0};
+ const labelFor=el=>{const scr=el.closest('.screen.clickable');if(scr){const v=scr.querySelector('video');return v&&!v.paused?'Pause':'Play'}const d=el.closest('[data-cursor]');return d?d.dataset.cursor:''};
+ const update=t=>{if(!t||!t.closest)return;last=t;const l=labelFor(t);cur.classList.toggle('is-label',!!l);if(l)lab.textContent=l;cur.classList.toggle('is-link',!l&&!!t.closest('a,button,summary,label,select,[role=button]'))};
+ addEventListener('pointermove',e=>{if(e.pointerType!=='mouse')return;x=e.clientX;y=e.clientY;if(!shown){shown=true;cx=x;cy=y;cur.classList.add('on')}if(!raf)raf=requestAnimationFrame(tick)},{passive:true});
+ document.documentElement.addEventListener('mouseleave',()=>{shown=false;cur.classList.remove('on')});
+ document.addEventListener('pointerover',e=>update(e.target));
+ document.addEventListener('click',()=>setTimeout(()=>update(last),50));
+ document.addEventListener('pointerdown',()=>cur.classList.add('down'));document.addEventListener('pointerup',()=>cur.classList.remove('down'));
+}
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -194,7 +254,9 @@ document.querySelectorAll('video.live').forEach(v=>{
  const sync=()=>{if(inView&&!userPaused&&!reduced.matches&&!document.hidden)play();else if(!v.paused)v.pause()};
  const label=()=>{const on=!v.paused;if(device)device.classList.toggle('is-playing',on);if(btn)btn.setAttribute('aria-label',(on?'Pause':'Play')+' the '+(v.dataset.name||'')+' recording')};
  v.addEventListener('play',label);v.addEventListener('pause',label);label();
- if(btn)btn.addEventListener('click',()=>{if(v.paused){userPaused=false;play()}else{userPaused=true;v.pause()}});
+ const toggle=()=>{if(v.paused){userPaused=false;play()}else{userPaused=true;v.pause()}};
+ if(btn)btn.addEventListener('click',toggle);
+ const screen=v.closest('.screen');if(screen){screen.classList.add('clickable');screen.addEventListener('click',toggle)}
  thumbs.forEach(th=>th.addEventListener('click',()=>{load();const go=()=>{v.currentTime=+th.dataset.t;if(!reduced.matches&&!userPaused)play()};v.readyState>=1?go():v.addEventListener('loadedmetadata',go,{once:true})}));
  if(thumbs.length)v.addEventListener('timeupdate',()=>{let idx=0;thumbs.forEach((th,i)=>{if(v.currentTime>=+th.dataset.t-.05)idx=i});
   thumbs.forEach((th,i)=>th.setAttribute('aria-pressed',String(i===idx)));const cur=thumbs[idx],start=+cur.dataset.t,end=idx+1<thumbs.length?+thumbs[idx+1].dataset.t:(v.duration||start+1);cur.style.setProperty('--p',Math.min(1,Math.max(0,(v.currentTime-start)/(end-start))).toFixed(3))});
