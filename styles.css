@@ -439,7 +439,7 @@ html.hero-in .hero .marquee{animation:fade-in 1.2s 1s var(--ease-soft) backwards
 }}
 
 /* Pause looping motion in scenes that are off screen. */
-.js .scene:not(.is-live) :is(.marquee-track,.starburst,.orbit-ring,.orbit-tag>span,.rings,.float-card,.graph-lines .dot,.constellation .ring,.typing i,.screen.scroll img,.steps.is-working .step,.steps.is-working .step-bar span,.demo-cursor .cur,.demo-cursor svg,.demo-cursor i,.fx-slash i,.fx-embers i,.graph-hub){animation-play-state:paused}
+.js .scene:not(.is-live) :is(.marquee-track,.starburst,.orbit-ring,.orbit-tag>span,.rings,.float-card,.graph-lines .dot,.constellation .ring,.typing i,.ring3d-spin,.screen.scroll img,.steps.is-working .step,.steps.is-working .step-bar span,.demo-cursor .cur,.demo-cursor svg,.demo-cursor i,.fx-slash i,.fx-embers i,.graph-hub){animation-play-state:paused}
 .js .scene:not(.is-live) .pulse::after{animation-play-state:paused}
 
 /* Hover and theme details */
@@ -562,6 +562,80 @@ html .tiltable.is-tilting{transform:perspective(900px) rotateX(var(--trx,0deg)) 
 @keyframes num-turn{0%,25%,100%{scale:1}6%{scale:1.18}12%{scale:1}}
 
 @media(prefers-reduced-motion:reduce){.vid-toggle{transition:none}}
+
+/* ==========================================================================
+   3D scenes (gl.js): a WebGL tile floor behind the hero and contact scenes.
+   ========================================================================== */
+.gl{position:absolute;inset:0;z-index:-1;display:block;width:100%;height:100%;pointer-events:none}
+.gl-on>.rings{display:none}
+.gl-on .starburst{visibility:hidden}
+.gl-on.hero::before,.gl-on.contact::before{display:none}
+/* Keeps words readable: the floor fades out behind the text. */
+.gl-on.hero::after,.gl-on.contact::after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse 62% 58% at 24% 40%,var(--bg) 18%,color-mix(in srgb,var(--bg) 55%,transparent) 55%,transparent 82%)}
+.gl-on.contact::after{background:radial-gradient(ellipse 70% 60% at 30% 50%,var(--bg) 20%,color-mix(in srgb,var(--bg) 50%,transparent) 58%,transparent 85%)}
+@media(max-width:720px){.gl-on.hero::after,.gl-on.contact::after{background:linear-gradient(180deg,transparent 0%,transparent 31%,color-mix(in srgb,var(--bg) 72%,transparent) 40%,color-mix(in srgb,var(--bg) 72%,transparent) 64%,color-mix(in srgb,var(--bg) 15%,transparent) 84%,transparent 100%)}}
+
+/* ==========================================================================
+   3D layer
+   ========================================================================== */
+/* Services: a pinned section whose cards turn on a 3D cylinder as you scroll (script.js adds .is-3d). */
+.ring-progress{display:none}
+.services.is-3d{height:270vh;padding-block:0}
+.services.is-3d>.rings{display:none}
+.services.is-3d>.wrap{position:sticky;top:68px;min-height:calc(100vh - 68px);display:flex;flex-direction:column;justify-content:center;padding-block:clamp(20px,4vh,48px)}
+.services.is-3d .heading-row{margin-bottom:clamp(18px,3.5vh,40px)}
+.services.is-3d .ring-stage{position:relative;height:clamp(320px,44vh,420px);perspective:1500px;perspective-origin:50% 35%}
+.services.is-3d .service-grid{position:absolute;inset:0;display:block;perspective:none;transform-style:preserve-3d;transform:translateZ(calc(var(--r) * -1)) rotateX(calc(4deg - var(--ty,0) * 10deg)) rotateY(calc(var(--spin,0deg) + var(--tx,0) * 12deg));transition:transform .45s var(--ease-out)}
+.services.is-3d .service{position:absolute;top:0;left:50%;width:var(--cw);height:100%;margin-left:calc(var(--cw) / -2);transform:rotateY(calc(var(--k) * var(--step))) translateZ(var(--r));backface-visibility:hidden;opacity:var(--o,1);transition:opacity .3s,box-shadow .45s var(--ease-out)}
+.services.is-3d .service.is-front{box-shadow:0 0 0 2px var(--orange),0 50px 80px -40px rgba(0,0,0,.55)}
+.services.is-3d .service h3{font-size:clamp(1.3rem,1.7vw,1.65rem);margin-top:auto;padding-top:28px}
+.services.is-3d .service p{font-size:.95rem}
+.services.is-3d .service .text-link{margin-top:0}
+.services.is-3d .ring-progress{display:flex;justify-content:center;gap:10px;margin-top:clamp(18px,3vh,32px);font:500 .7rem var(--mono);letter-spacing:.08em}
+.ring-progress i{font-style:normal;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);transition:background .3s,color .3s,border-color .3s}
+.ring-progress i.on{background:var(--coal);color:var(--cream);border-color:var(--coal)}
+
+/* The full stack: a ring of letters spinning in 3D, readable at the front and faint at the back. */
+.ring3d{position:relative;height:clamp(170px,21vw,270px);margin-top:clamp(50px,6vw,90px);perspective:1100px;perspective-origin:50% 20%;font:500 clamp(1.5rem,3.3vw,3rem)/1 var(--mono);text-transform:uppercase;-webkit-user-select:none;user-select:none}
+.ring3d-spin{position:absolute;left:50%;top:50%;transform-style:preserve-3d;transform:rotateX(-16deg) rotateY(0deg);animation:ring-spin 40s linear infinite}
+@keyframes ring-spin{to{transform:rotateX(-16deg) rotateY(-360deg)}}
+.rc{position:absolute;left:-.31em;top:-.5em;width:.62em;text-align:center;backface-visibility:hidden;--R:calc(var(--n) * .62em / 6.2832);transform:rotateY(calc(var(--i) * 360deg / var(--n))) translateZ(var(--R))}
+.rc.out{color:var(--fg)}
+.rc.in{color:var(--strip);transform:rotateY(calc(var(--i) * 360deg / var(--n))) translateZ(var(--R)) rotateY(180deg)}
+
+/* Real builds: the screenshots sit at different depths and the whole field orbits as you scroll past. */
+.builds .wrap{perspective:1700px}
+.builds-field{transform-style:preserve-3d;perspective:none}
+.float-shot{transform:rotateX(var(--frx)) rotateY(var(--fry)) rotateZ(var(--frz)) translate3d(calc(var(--px,0) * var(--depth) * 16px),calc(var(--py,0) * var(--depth) * 12px),calc((var(--depth) - 1) * 170px))}
+.builds-card{transform:translateZ(150px)}
+@supports (animation-timeline:view()){@media(prefers-reduced-motion:no-preference){
+ @keyframes field-orbit{from{rotate:y 24deg}to{rotate:y -24deg}}
+ .builds-field{animation:field-orbit linear both;animation-timeline:view();animation-range:cover}
+}}
+
+/* Big titles: letters lift toward the cursor (script.js sets --f). Project titles scatter upward as they leave. */
+:where(.hero-title,#contact-title) .ch{translate:0 calc(var(--f,0) * -.14em);rotate:calc(var(--f,0) * var(--dir,1) * 10deg);scale:calc(1 + var(--f,0) * .1);transition:translate .45s var(--ease-out),rotate .45s var(--ease-out),scale .45s var(--ease-out)}
+@supports (animation-timeline:view()){@media(prefers-reduced-motion:no-preference){
+ .project .title{view-timeline:--ttl block}
+ .project .title .ch{animation:ch-out linear both;animation-timeline:--ttl;animation-range:exit 10% exit 100%}
+ @keyframes ch-out{to{translate:0 calc(var(--u,5) * -9px - 24px);rotate:var(--r);opacity:0}}
+ /* Paragraphs light up word by word (script.js wraps the words). */
+ .scrub{view-timeline:--scrub block}
+ .scrub .wd{animation:wd-in linear both;animation-timeline:--scrub;animation-range:var(--wr)}
+ @keyframes wd-in{from{opacity:.14}}
+}}
+
+/* Cursor ring (mouse only, script.js): grows over links and becomes a label over project screens. */
+.cursor{position:fixed;left:0;top:0;z-index:250;display:grid;place-items:center;width:34px;height:34px;margin:-17px 0 0 -17px;border:1.5px solid #fff;border-radius:999px;mix-blend-mode:difference;pointer-events:none;opacity:0;transition:opacity .25s,width .35s var(--ease-out),height .35s var(--ease-out),margin .35s var(--ease-out),background .25s,border-color .25s,scale .15s}
+.cursor.on{opacity:1}.cursor.down{scale:.85}
+.cursor.is-link{width:58px;height:58px;margin:-29px 0 0 -29px}
+.cursor.is-label{width:84px;height:84px;margin:-42px 0 0 -42px;background:var(--orange);border-color:var(--orange);mix-blend-mode:normal}
+.cursor-label{font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--coal);opacity:0;transition:opacity .2s}
+.cursor.is-label .cursor-label{opacity:1}
+.screen.clickable{cursor:pointer}
+@media(hover:none),(pointer:coarse){.cursor{display:none}}
+
+@media(prefers-reduced-motion:reduce){.ring3d-spin{animation:none}.cursor{display:none}}
 
 /* ==========================================================================
    Responsive
