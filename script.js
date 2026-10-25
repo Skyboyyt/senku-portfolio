@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 try{var t=localStorage.getItem('fahad-theme');document.documentElement.dataset.theme=['light','dark'].includes(t)?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
+// Accent colors: apply the saved pair before the page paints. The list matches the [data-accent] rules in styles.css.
+try{var a=localStorage.getItem('fahad-accent');if(['ember','tide','orchid','punch','mint'].includes(a))document.documentElement.dataset.accent=a}catch(e){}
 document.documentElement.classList.add('js');
 // Intro: once per browser session. CSS hides it after 6s regardless.
 try{if(!sessionStorage.getItem('senku-intro'))document.documentElement.classList.add('intro-on')}catch(e){}
@@ -41,15 +43,45 @@ const preference=matchMedia('(prefers-color-scheme: dark)'),buttons=[...document
 let manual=false;try{manual=['dark','light'].includes(localStorage.getItem('fahad-theme'))}catch(e){}
 function setTheme(theme){root.dataset.theme=theme;buttons.forEach(b=>{b.setAttribute('aria-label','Switch to '+(theme==='dark'?'light':'dark')+' mode');b.title=b.getAttribute('aria-label')});document.querySelector('meta[name="theme-color"]').content=theme==='dark'?'#0e0f12':'#f7f4ec'}
 setTheme(root.dataset.theme||(preference.matches?'dark':'light'));
-buttons.forEach(b=>b.addEventListener('click',()=>{const next=root.dataset.theme==='dark'?'light':'dark';manual=true;try{localStorage.setItem('fahad-theme',next)}catch(e){}root.classList.add('theme-anim');
- if(typeof document.startViewTransition!=='function'||reduced.matches){setTheme(next);return}
- const r=b.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,radius=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+// Spread a change in a circle from the element that triggered it; apply it instantly where that isn't supported.
+function spread(from,apply,duration){
+ if(typeof document.startViewTransition!=='function'||reduced.matches){apply();return}
+ const r=from.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,radius=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
  root.classList.add('theme-vt');
- let tr;try{tr=document.startViewTransition(()=>setTheme(next))}catch(e){root.classList.remove('theme-vt');setTheme(next);return}
- tr.ready.then(()=>root.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+radius+'px at '+x+'px '+y+'px)']},{duration:640,easing:'cubic-bezier(.65,0,.35,1)',pseudoElement:'::view-transition-new(root)'})).catch(()=>{});
- tr.finished.finally(()=>root.classList.remove('theme-vt'))}));
+ let tr;try{tr=document.startViewTransition(apply)}catch(e){root.classList.remove('theme-vt');apply();return}
+ tr.ready.then(()=>root.animate({clipPath:['circle(0px at '+x+'px '+y+'px)','circle('+radius+'px at '+x+'px '+y+'px)']},{duration,easing:'cubic-bezier(.65,0,.35,1)',pseudoElement:'::view-transition-new(root)'})).catch(()=>{});
+ tr.finished.finally(()=>root.classList.remove('theme-vt'))}
+buttons.forEach(b=>b.addEventListener('click',()=>{const next=root.dataset.theme==='dark'?'light':'dark';manual=true;try{localStorage.setItem('fahad-theme',next)}catch(e){}root.classList.add('theme-anim');spread(b,()=>setTheme(next),640)}));
 preference.addEventListener('change',e=>{if(!manual)setTheme(e.matches?'dark':'light')});
 addEventListener('storage',e=>{if(e.key!=='fahad-theme')return;manual=['dark','light'].includes(e.newValue);setTheme(manual?e.newValue:preference.matches?'dark':'light')});
+
+// Accent colors: header panel (wider screens) and mobile-menu row are two radio groups kept in sync. The choice
+// is saved, follows other open tabs and recolors the favicon; the 3D scenes in gl.js repaint when data-accent changes.
+const ACCENTS={ember:'Ember',tide:'Tide',orchid:'Orchid',punch:'Punch',mint:'Mint'},picker=document.querySelector('.accent-picker'),
+ accentToggle=picker&&picker.querySelector('.accent-toggle'),accentRadios=[...document.querySelectorAll('.swatches input')],favicon=document.querySelector('link[rel="icon"]');
+const accentOf=v=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(ACCENTS,v)?v:'ember';
+function setAccent(name){
+ name=accentOf(name);if(name==='ember')delete root.dataset.accent;else root.dataset.accent=name;
+ accentRadios.forEach(r=>{r.checked=r.value===name});
+ if(accentToggle){accentToggle.setAttribute('aria-label','Change accent color (current: '+ACCENTS[name]+')');accentToggle.title='Accent color: '+ACCENTS[name]}
+ const c=getComputedStyle(root).getPropertyValue('--accent').trim();
+ if(favicon&&/^#[0-9a-f]{6}$/i.test(c))favicon.href=favicon.href.replace(/fill='%23[0-9a-f]{6}'%3EFS/i,"fill='%23"+c.slice(1)+"'%3EFS");
+}
+setAccent(root.dataset.accent);
+accentRadios.forEach(r=>r.addEventListener('change',()=>{if(!r.checked)return;try{localStorage.setItem('fahad-accent',r.value)}catch(e){}spread(r.closest('.swatch'),()=>setAccent(r.value),560)}));
+addEventListener('storage',e=>{if(e.key==='fahad-accent')setAccent(e.newValue)});
+if(picker){
+ const panel=picker.querySelector('.accent-panel');
+ const openPicker=()=>{picker.classList.add('is-open');accentToggle.setAttribute('aria-expanded','true');(panel.querySelector('input:checked')||accentRadios[0]).focus({preventScroll:true})};
+ const closePicker=(refocus)=>{if(!picker.classList.contains('is-open'))return;picker.classList.remove('is-open');accentToggle.setAttribute('aria-expanded','false');if(refocus)accentToggle.focus({preventScroll:true})};
+ accentToggle.addEventListener('click',()=>picker.classList.contains('is-open')?closePicker(false):openPicker());
+ picker.addEventListener('keydown',e=>{if(e.key==='Escape'&&picker.classList.contains('is-open')){e.stopPropagation();closePicker(true)}});
+ // Enter confirms the highlighted color and closes, as in a native select.
+ panel.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();closePicker(true)}});
+ document.addEventListener('pointerdown',e=>{if(!picker.contains(e.target))closePicker(false)});
+ picker.addEventListener('focusout',e=>{if(e.relatedTarget&&!picker.contains(e.relatedTarget))closePicker(false)});
+ matchMedia('(max-width:720px)').addEventListener('change',e=>{if(e.matches)closePicker(false)});
+}
 
 // Mobile menu: modal, focus-trapped, scroll-locked; closes on Escape, link choice and desktop resize.
 const menu=document.getElementById('mobile-menu'),toggle=document.querySelector('.menu-toggle'),close=menu.querySelector('.menu-close');
@@ -59,7 +91,7 @@ function closeMenu(){if(!menu.open)return;menu.classList.remove('is-open');clear
 function openMenu(){if(menu.open)return;clearTimeout(timer);scroll=window.scrollY;menu.showModal();document.body.classList.add('menu-open');Object.assign(document.body.style,{position:'fixed',top:'-'+scroll+'px',width:'100%'});toggle.setAttribute('aria-expanded','true');toggle.setAttribute('aria-label','Close navigation menu');requestAnimationFrame(()=>menu.classList.add('is-open'));close.focus({preventScroll:true})}
 toggle.addEventListener('click',()=>menu.open?closeMenu():openMenu());close.addEventListener('click',closeMenu);menu.addEventListener('cancel',e=>{e.preventDefault();closeMenu()});
 menu.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();target=a.getAttribute('href');closeMenu()}));
-menu.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...menu.querySelectorAll('button,a[href]')],first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}});
+menu.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const items=[...menu.querySelectorAll('button,a[href],input[type=radio]:checked')],first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}});
 matchMedia('(min-width:721px)').addEventListener('change',e=>{if(e.matches&&menu.open)finishClose()});
 
 // Avatar falls back to a monogram if the image can't load.
@@ -295,7 +327,7 @@ if(copy&&navigator.clipboard){copy.hidden=false;copy.addEventListener('click',()
 // Easter egg: type "senku" anywhere.
 let typed='';
 addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.target.closest('input,textarea,[contenteditable]'))return;typed=(typed+e.key.toLowerCase()).slice(-5);if(typed!=='senku')return;typed='';say('Ten billion percent excited to build with you. ✦');if(!reduced.matches)confetti()});
-function confetti(){const c=document.createElement('canvas'),x=c.getContext('2d'),dpr=devicePixelRatio||1;c.className='confetti';c.width=innerWidth*dpr;c.height=innerHeight*dpr;x.scale(dpr,dpr);document.body.appendChild(c);const colors=['#ff6a3d','#c8f04e','#f3efe4','#ff9a76','#9bc31c'],bits=Array.from({length:140},()=>({x:innerWidth/2,y:innerHeight*.6,vx:(Math.random()-.5)*14,vy:-Math.random()*16-6,s:Math.random()*6+4,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:colors[Math.random()*colors.length|0]}));let n=0;(function step(){x.clearRect(0,0,innerWidth,innerHeight);bits.forEach(b=>{b.vy+=.45;b.x+=b.vx;b.y+=b.vy;b.r+=b.vr;x.save();x.translate(b.x,b.y);x.rotate(b.r);x.fillStyle=b.c;x.fillRect(-b.s/2,-b.s/4,b.s,b.s/2);x.restore()});if(++n<150)requestAnimationFrame(step);else c.remove()})()}
+function confetti(){const c=document.createElement('canvas'),x=c.getContext('2d'),dpr=devicePixelRatio||1;c.className='confetti';c.width=innerWidth*dpr;c.height=innerHeight*dpr;x.scale(dpr,dpr);document.body.appendChild(c);const cs=getComputedStyle(document.documentElement),colors=['--accent','--accent-2','--cream','--accent-soft','--accent-2-deep'].map(v=>cs.getPropertyValue(v).trim()||'#f3efe4'),bits=Array.from({length:140},()=>({x:innerWidth/2,y:innerHeight*.6,vx:(Math.random()-.5)*14,vy:-Math.random()*16-6,s:Math.random()*6+4,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:colors[Math.random()*colors.length|0]}));let n=0;(function step(){x.clearRect(0,0,innerWidth,innerHeight);bits.forEach(b=>{b.vy+=.45;b.x+=b.vx;b.y+=b.vy;b.r+=b.vr;x.save();x.translate(b.x,b.y);x.rotate(b.r);x.fillStyle=b.c;x.fillRect(-b.s/2,-b.s/4,b.s,b.s/2);x.restore()});if(++n<150)requestAnimationFrame(step);else c.remove()})()}
 });
 
 // Intro: SENKU / SKYBOY decodes from random glyphs, then the screen breaks into tiles that clear away.
@@ -304,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const root=document.documentElement,intro=document.querySelector('.intro'),reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const heroIn=()=>root.classList.add('hero-in');
 if(!intro||!root.classList.contains('intro-on')){heroIn();return}
-const tiles=intro.querySelector('.intro-tiles'),size=innerWidth<720?84:120,cols=Math.ceil(innerWidth/size),rows=Math.ceil(innerHeight/size),palette=['#0e0f12','#0e0f12','#f3efe4','#0e0f12','#ff6a3d'],frag=document.createDocumentFragment();
+const tiles=intro.querySelector('.intro-tiles'),size=innerWidth<720?84:120,cols=Math.ceil(innerWidth/size),rows=Math.ceil(innerHeight/size),palette=['#0e0f12','#0e0f12','#f3efe4','#0e0f12','var(--accent)'],frag=document.createDocumentFragment();
 tiles.style.setProperty('--cols',cols);tiles.style.setProperty('--rows',rows);
 for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const tile=document.createElement('i');tile.className='intro-tile';tile.style.setProperty('--i',c+r);tile.style.setProperty('--c',palette[(c*7+r*3)%palette.length]);frag.appendChild(tile)}
 tiles.appendChild(frag);tiles.classList.add('has-tiles');

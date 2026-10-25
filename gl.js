@@ -1,5 +1,5 @@
 // 3D tile scenes for the hero and contact sections, drawn with hand-written WebGL2 (no library).
-// A floor of rounded tiles ripples under the pointer, tiles flip to reveal orange, cream and lime, and a real
+// A floor of rounded tiles ripples under the pointer, tiles flip to reveal the two accent colors and cream, and a real
 // 3D starburst spins above it. In the hero the floor crumbles away as you scroll; at the contact scene it
 // assembles as you arrive. Phones get a smaller floor. Without WebGL2 the flat design stays as it is, and with
 // reduced motion turned on a single still frame is drawn.
@@ -131,14 +131,18 @@ function createScene(scene, opts) {
     const x = (c - (cols - 1) / 2) * 1.0, z = 3.2 - r * 1.0;
     tiles.push({ x, z, seed: Math.random(), seed2: Math.random(), dist: Math.hypot(x, z + 4), pop: -1e9, popCol: null, row: r, free: false });
   }
+  // Accent colors come from the CSS tokens, so the floor follows the visitor's chosen accent pair.
   const palette = { orange: hex('#ff6a3d'), lime: hex('#c8f04e'), cream: hex('#f3efe4') };
   let colors = {};
   const readTheme = () => {
-    const cs = getComputedStyle(scene), bg = hex(cs.getPropertyValue('--bg') || '#0e0f12');
-    const dark = (bg[0] + bg[1] + bg[2]) / 3 < .5;
+    const cs = getComputedStyle(scene), css = (name, fallback) => hex(cs.getPropertyValue(name).trim() || fallback);
+    const bg = css('--bg', '#0e0f12'), dark = (bg[0] + bg[1] + bg[2]) / 3 < .5;
+    palette.orange = css('--accent', '#ff6a3d'); palette.lime = css('--accent-2', '#c8f04e');
+    // The warm glow under the pointer is a darker, more saturated version of the main accent.
+    const glow = k => palette.orange.map(v => Math.pow(v, 1.4) * k);
     colors = dark
-      ? { bg, tile: mix(bg, [1, 1, 1], .055), edge: mix(bg, [1, 1, 1], .17), glow: [.55, .18, .08], dark: 1, star: opts.star === 'lime' ? palette.lime : palette.orange }
-      : { bg, tile: mix(bg, [0, 0, 0], .045), edge: mix(bg, [0, 0, 0], .16), glow: [.45, .13, .04], dark: 0, star: opts.star === 'lime' ? hex('#9bc31c') : hex('#e8531f') };
+      ? { bg, tile: mix(bg, [1, 1, 1], .055), edge: mix(bg, [1, 1, 1], .17), glow: glow(.55), dark: 1, star: opts.star === 'lime' ? palette.lime : palette.orange }
+      : { bg, tile: mix(bg, [0, 0, 0], .045), edge: mix(bg, [0, 0, 0], .16), glow: glow(.45), dark: 0, star: opts.star === 'lime' ? css('--accent-2-deep', '#94bd18') : css('--accent-deep', '#e8531f') };
   };
   readTheme();
 
@@ -197,7 +201,6 @@ function createScene(scene, opts) {
   };
 
   let start = null, running = false, raf = 0, lastPop = 0, introAt = null;
-  const lime = palette.lime, cream = palette.cream, orange = palette.orange;
   function draw(now) {
     if (start === null) start = now;
     const t = (now - start) / 1000, still = reduced.matches;
@@ -211,7 +214,7 @@ function createScene(scene, opts) {
     if (!still && opts.pops && freeTiles.length && now - lastPop > (small ? 520 : 300)) {
       lastPop = now;
       const cand = freeTiles[(Math.random() * freeTiles.length) | 0];
-      if (now - cand.pop > 4200) { cand.pop = now; cand.popCol = [orange, orange, cream, lime][(Math.random() * 4) | 0] }
+      if (now - cand.pop > 4200) { cand.pop = now; cand.popCol = ['orange', 'orange', 'cream', 'lime'][(Math.random() * 4) | 0] }
     }
     const intro = still ? 1 : introAt === null ? 0 : (now - introAt) / 1000;
     let o = 0;
@@ -229,7 +232,7 @@ function createScene(scene, opts) {
       if (pe >= 0 && pe < 3.6) {
         const f = pe < .8 ? ease(pe / .8) : pe < 2.6 ? 1 : 1 - ease((pe - 2.6) / 1);
         rx = f * Math.PI; y += Math.sin(f * Math.PI) * .7;
-        if (f > .5) { col = tl.popCol; glow += colors.dark ? .05 : 0 }
+        if (f > .5) { col = palette[tl.popCol]; glow += colors.dark ? .05 : 0 }
       }
       // intro: tiles rise from below, centre first
       const it = clamp((intro - tl.dist * .045 - tl.seed * .15) / .9);
@@ -298,7 +301,7 @@ function createScene(scene, opts) {
   document.addEventListener('visibilitychange', () => document.hidden ? pause() : visible && play());
   reduced.addEventListener('change', () => { if (reduced.matches) { pause(); draw(performance.now()) } else if (visible) play() });
   addEventListener('scroll', () => { if (!running && visible) draw(performance.now()) }, { passive: true });
-  new MutationObserver(() => { readTheme(); if (!running) draw(performance.now()) }).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  new MutationObserver(() => { readTheme(); if (!running) draw(performance.now()) }).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-accent'] });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { readTheme(); if (!running) draw(performance.now()) });
   canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); pause(); canvas.remove(); scene.classList.remove('gl-on') });
 
