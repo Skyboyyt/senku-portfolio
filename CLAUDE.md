@@ -7,7 +7,7 @@ These are the owner's standing standards. Apply them to every website or web app
 ## This repository
 
 - The site is currently plain HTML, CSS and JavaScript. Keep it working on that stack; under §1, propose any move to React, TypeScript or Next.js and get the owner's approval before changing the architecture.
-- The project rules in [AGENTS.md](AGENTS.md), imported below, also apply. They include preserving the portfolio design restored on 22 October 2026. Where AGENTS.md is more specific, such as honest labelling of fictional businesses and simulated actions, follow it.
+- The project rules in [AGENTS.md](AGENTS.md), imported below, also apply. They include preserving the "Ideas in motion" portfolio design introduced on 25 October 2026. Where AGENTS.md is more specific, such as honest labelling of fictional businesses and simulated actions, follow it.
 
 @AGENTS.md
 
