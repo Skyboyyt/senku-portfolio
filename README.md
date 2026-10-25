@@ -79,6 +79,6 @@ Each project has a native details/summary section. Click the label, or focus it 
 
 ## Services, sharing and 404
 - **Services** ("What I can help with") lists four kinds of work, each linked to a real project as proof. Keep every card tied to work that exists.
-- **Link previews:** Open Graph and Twitter tags give a proper title and description when the site is shared on WhatsApp, X or elsewhere. A preview image (`og:image`) needs the site's full public address, so add it once the final domain is fixed.
+- **Link previews:** Open Graph and Twitter tags give a title, description and a large preview image when the site is shared on WhatsApp, X, LinkedIn or elsewhere. The image is `assets/share-card.jpg` (1200×630, under 100 KB so WhatsApp shows it). The tags use the full address https://senku-portfolio.vercel.app/, so update them, and the canonical link, if the site moves to a new domain. After changing the image, give it a new file name, because WhatsApp and X cache previews.
 - **Structured data:** a schema.org `Person` block helps search engines connect the names Fahad Sani, Senku and Skyboy.
 - **404.html** is a styled "page not found" screen in the same design. Vercel and most static hosts serve it automatically.
