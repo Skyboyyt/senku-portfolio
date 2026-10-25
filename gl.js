@@ -1,13 +1,12 @@
 // 3D tile scenes for the hero and contact sections, drawn with hand-written WebGL2 (no library).
 // A floor of rounded tiles ripples under the pointer, tiles flip to reveal orange, cream and lime, and a real
 // 3D starburst spins above it. In the hero the floor crumbles away as you scroll; at the contact scene it
-// assembles as you arrive. Without WebGL2, with reduced motion turned on or on very small screens, the
-// existing flat design stays as it is.
+// assembles as you arrive. Phones get a smaller floor. Without WebGL2 the flat design stays as it is, and with
+// reduced motion turned on a single still frame is drawn.
 (() => {
 'use strict';
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-const fine = matchMedia('(hover:hover) and (pointer:fine)');
 
 // ---- small matrix helpers (column-major, like WebGL) ----
 const m4 = {
