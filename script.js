@@ -1,3 +1,12 @@
+// Learnspace walkthrough: reuse the existing project video presentation and playback controls.
+document.addEventListener('DOMContentLoaded', () => {
+ const anchor=document.querySelector('#learnspace .subhead');
+ if(anchor&&!document.querySelector('#learnspace video.live'))anchor.insertAdjacentHTML('afterend', `
+<div class="stage" data-tilt><div class="rig"><div class="tilt">
+<div class="device"><div class="device-bar" aria-hidden="true"><i></i><i></i><i></i><span>learnspace-skyboy.vercel.app</span></div><div class="screen tall"><video class="live" muted playsinline loop preload="none" width="1280" height="880" poster="assets/video/learnspace-poster.webp" src="assets/video/learnspace.mp4" data-src-sm="assets/video/learnspace-sm.mp4" data-name="Learnspace" aria-label="Screen recording of Learnspace: the animated dashboard, course catalog, lesson classroom, Practice Lab filters, answering a question with its explanation, and light and dark appearances."></video></div><button class="vid-toggle" type="button" aria-label="Play the recording"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" fill="currentColor"/></svg><span class="t-play" aria-hidden="true">Play</span><span class="t-pause" aria-hidden="true">Pause</span></button></div>
+</div></div></div>`);
+});
+
 try{var t=localStorage.getItem('fahad-theme');document.documentElement.dataset.theme=['light','dark'].includes(t)?t:matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}catch(e){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
 document.documentElement.classList.add('js');
 // Intro: once per browser session. CSS hides it after 6s regardless.
